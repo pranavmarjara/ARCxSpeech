@@ -1,0 +1,5 @@
+SAMPLE_RATE = 48000
+CHANNELS = 1
+DURATION = 5
+
+OUTPUT_DIR = "recordings"
