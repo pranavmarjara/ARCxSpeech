@@ -1,9 +1,15 @@
 import tkinter as tk
 
+from tkinter import simpledialog
+from app.session_store import save_session
+
 from tkinter import ttk
 from tkinter import filedialog
 
-from app.feature_extractor import extract_features
+from app.feature_extractor import (
+    extract_vowel_features,
+    extract_ddk_features
+)
 
 
 class ARCxSpeechUI:
@@ -31,6 +37,52 @@ class ARCxSpeechUI:
         )
 
         title.pack(pady=10)
+
+        # -----------------------------
+        # PATIENT NAME
+        # -----------------------------
+
+        patient_label = tk.Label(
+            root,
+            text="Patient Name",
+            font=("Arial", 12, "bold")
+        )
+
+        patient_label.pack(pady=5)
+
+        self.patient_entry = tk.Entry(
+            root,
+            width=40
+        )
+
+        self.patient_entry.pack(pady=5)
+
+        # -----------------------------
+        # TASK TYPE
+        # -----------------------------
+
+        task_label = tk.Label(
+            root,
+            text="Task Type",
+            font=("Arial", 12, "bold")
+        )
+
+        task_label.pack(pady=5)
+
+        self.task_var = tk.StringVar()
+
+        self.task_dropdown = ttk.Combobox(
+            root,
+            textvariable=self.task_var,
+            values=[
+                "Sustained Vowel",
+                "DDK"
+            ],
+            state="readonly",
+            width=37
+        )
+
+        self.task_dropdown.pack(pady=5)
 
         # -----------------------------
         # SELECT FILE BUTTON
@@ -137,8 +189,39 @@ class ARCxSpeechUI:
         if not self.filepath:
             return
 
-        metrics = extract_features(
-            self.filepath
+
+        patient_name = self.patient_entry.get()
+
+        task = self.task_var.get()
+
+        if not patient_name or not task:
+            return
+
+        if task == "Sustained Vowel":
+
+            metrics = extract_vowel_features(
+                self.filepath
+            )
+
+        elif task == "DDK":
+
+            metrics = extract_ddk_features(
+                self.filepath
+            )
+
+        else:
+            return
+        patient_name = self.patient_entry.get()
+
+        task = self.task_var.get()
+
+        if not patient_name or not task:
+            return
+
+        save_session(
+            patient_name,
+            task,
+            metrics
         )
 
         # Clear previous rows
