@@ -1,11 +1,10 @@
-from app.recorder import record_audio
-from app.verifier import verify_audio
+import tkinter as tk
 
-print("\nARC Clinical Speech")
-print("----------------------------")
+from app.ui import ARCxSpeechUI
 
-filepath, audio = record_audio()
 
-verify_audio(filepath)
+root = tk.Tk()
 
-print(f"\nSaved File: {filepath}")
+app = ARCxSpeechUI(root)
+
+root.mainloop()

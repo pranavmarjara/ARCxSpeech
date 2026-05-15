@@ -1,0 +1,212 @@
+import librosa
+import numpy as np
+import parselmouth
+
+from scipy.signal import find_peaks
+
+
+def extract_features(filepath):
+
+    # -----------------------------
+    # LOAD AUDIO
+    # -----------------------------
+
+    y, sr = librosa.load(filepath, sr=None)
+
+    duration = librosa.get_duration(y=y, sr=sr)
+
+    # -----------------------------
+    # RMS ENERGY
+    # -----------------------------
+
+    rms = librosa.feature.rms(y=y)[0]
+
+    rms_mean = float(np.mean(rms))
+    rms_std = float(np.std(rms))
+
+    # -----------------------------
+    # ZERO CROSSING RATE
+    # -----------------------------
+
+    zcr = librosa.feature.zero_crossing_rate(y)[0]
+
+    zcr_mean = float(np.mean(zcr))
+
+    # -----------------------------
+    # SPECTRAL FEATURES
+    # -----------------------------
+
+    centroid = librosa.feature.spectral_centroid(
+        y=y,
+        sr=sr
+    )[0]
+
+    rolloff = librosa.feature.spectral_rolloff(
+        y=y,
+        sr=sr
+    )[0]
+
+    spectral_centroid_mean = float(np.mean(centroid))
+    spectral_rolloff_mean = float(np.mean(rolloff))
+
+    # -----------------------------
+    # FUNDAMENTAL FREQUENCY
+    # -----------------------------
+
+    f0, voiced_flag, voiced_probs = librosa.pyin(
+        y,
+        fmin=50,
+        fmax=500,
+        sr=sr
+    )
+
+    f0_clean = f0[~np.isnan(f0)]
+
+    if len(f0_clean) > 0:
+
+        f0_mean = float(np.mean(f0_clean))
+        f0_std = float(np.std(f0_clean))
+        f0_min = float(np.min(f0_clean))
+        f0_max = float(np.max(f0_clean))
+
+    else:
+
+        f0_mean = 0
+        f0_std = 0
+        f0_min = 0
+        f0_max = 0
+
+    # -----------------------------
+    # PRAAT FEATURES
+    # -----------------------------
+
+    snd = parselmouth.Sound(filepath)
+
+    harmonicity = snd.to_harmonicity()
+
+    harmonicity_values = harmonicity.values[
+        harmonicity.values != -200
+    ]
+
+    if len(harmonicity_values) > 0:
+        hnr = float(np.mean(harmonicity_values))
+    else:
+        hnr = 0
+
+    point_process = parselmouth.praat.call(
+        snd,
+        "To PointProcess (periodic, cc)",
+        75,
+        500
+    )
+
+    jitter_local = parselmouth.praat.call(
+        point_process,
+        "Get jitter (local)",
+        0,
+        0,
+        0.0001,
+        0.02,
+        1.3
+    )
+
+    shimmer_local = parselmouth.praat.call(
+        [snd, point_process],
+        "Get shimmer (local)",
+        0,
+        0,
+        0.0001,
+        0.02,
+        1.3,
+        1.6
+    )
+
+    # -----------------------------
+    # DDK ANALYSIS
+    # -----------------------------
+
+    envelope = np.abs(y)
+
+    peaks, _ = find_peaks(
+        envelope,
+        distance=sr // 4,
+        height=np.mean(envelope)
+    )
+
+    repetition_count = len(peaks)
+
+    if repetition_count > 1:
+
+        intervals = np.diff(peaks) / sr
+
+        repetition_rate = repetition_count / duration
+
+        interval_mean = float(np.mean(intervals))
+        interval_std = float(np.std(intervals))
+
+    else:
+
+        repetition_rate = 0
+        interval_mean = 0
+        interval_std = 0
+
+    # -----------------------------
+    # RETURN FEATURES
+    # -----------------------------
+
+    metrics = {
+
+        "Sample Rate": sr,
+        "Duration (sec)": round(duration, 3),
+
+        "RMS Mean": round(rms_mean, 6),
+        "RMS Std": round(rms_std, 6),
+
+        "ZCR Mean": round(zcr_mean, 6),
+
+        "Spectral Centroid": round(
+            spectral_centroid_mean,
+            3
+        ),
+
+        "Spectral Rolloff": round(
+            spectral_rolloff_mean,
+            3
+        ),
+
+        "F0 Mean": round(f0_mean, 3),
+        "F0 Std": round(f0_std, 3),
+        "F0 Min": round(f0_min, 3),
+        "F0 Max": round(f0_max, 3),
+
+        "HNR": round(hnr, 3),
+
+        "Jitter Local": round(
+            jitter_local,
+            6
+        ),
+
+        "Shimmer Local": round(
+            shimmer_local,
+            6
+        ),
+
+        "DDK Repetition Count": repetition_count,
+
+        "DDK Repetition Rate": round(
+            repetition_rate,
+            3
+        ),
+
+        "DDK Interval Mean": round(
+            interval_mean,
+            3
+        ),
+
+        "DDK Interval Std": round(
+            interval_std,
+            3
+        )
+    }
+
+    return metrics
