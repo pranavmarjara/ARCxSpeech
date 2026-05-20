@@ -6,6 +6,7 @@ from tkinter import messagebox
 from app.ui import ARCxSpeechUI
 from app.history_ui import HistoryWindow
 
+from app.research_ui import ResearchWindow
 
 root = tk.Tk()
 
@@ -13,6 +14,13 @@ root.title("ARCxSpeech")
 
 root.geometry("400x300")
 
+def open_research():
+
+    research_window = tk.Toplevel(root)
+
+    ResearchWindow(
+        research_window
+    )
 
 def open_analysis():
 
@@ -55,5 +63,15 @@ history_btn = tk.Button(
 )
 
 history_btn.pack(pady=15)
+
+research_btn = tk.Button(
+    root,
+    text="Open R&D Mode",
+    command=open_research,
+    width=25,
+    height=2
+)
+
+research_btn.pack(pady=15)
 
 root.mainloop()
