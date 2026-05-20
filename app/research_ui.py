@@ -90,7 +90,7 @@ class ResearchWindow:
 
         upload_btn = tk.Button(
             root,
-            text="Bulk Upload 7 WAVs",
+            text="Bulk Upload upto 50 WAVs",
             command=self.bulk_upload,
             width=25,
             height=2
@@ -207,7 +207,7 @@ class ResearchWindow:
         ResearchHistoryWindow(
             history_window
         )
-        
+
     # ---------------------------------
     # PROCESS BATCH
     # ---------------------------------
@@ -227,11 +227,22 @@ class ResearchWindow:
 
             return
 
-        if len(self.filepaths) != 7:
+        file_count = len(self.filepaths)
+
+        if file_count < 1:
 
             messagebox.showerror(
                 "Error",
-                "Upload exactly 7 WAV files."
+                "Upload at least 1 WAV file."
+            )
+
+            return
+
+        if file_count > 50:
+
+            messagebox.showerror(
+                "Error",
+                "Maximum batch size is 50 WAV files."
             )
 
             return
