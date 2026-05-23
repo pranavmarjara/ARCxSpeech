@@ -139,12 +139,46 @@ class ResearchWindow:
         self.file_list.pack(pady=10)
 
         # -------------------------
-        # TABLE
+        # INDIVIDUAL AUDIO TABLE
         # -------------------------
+
+        individual_label = tk.Label(
+            root,
+            text="Individual Audio Metrics",
+            font=("Arial", 14, "bold")
+        )
+
+        individual_label.pack(pady=10)
+
+        self.individual_tree = ttk.Treeview(
+            root,
+            show="headings",
+            height=10
+        )
+
+        self.individual_tree.pack(
+            fill="x",
+            padx=20,
+            pady=10
+        )
+
+        # -------------------------
+        # AGGREGATE TABLE
+        # -------------------------
+
+        aggregate_label = tk.Label(
+            root,
+            text="Aggregate Statistics",
+            font=("Arial", 14, "bold")
+        )
+
+        aggregate_label.pack(pady=10)
 
         columns = (
             "Metric",
             "Mean",
+            "Median",
+            "Mode",
             "Std Dev"
         )
 
@@ -152,7 +186,7 @@ class ResearchWindow:
             root,
             columns=columns,
             show="headings",
-            height=20
+            height=15
         )
 
         for col in columns:
@@ -160,6 +194,11 @@ class ResearchWindow:
             self.tree.heading(
                 col,
                 text=col
+            )
+
+            self.tree.column(
+                col,
+                width=150
             )
 
         self.tree.pack(
@@ -247,6 +286,8 @@ class ResearchWindow:
 
             return
 
+        all_metrics = []
+
         recordings = []
 
         for filepath in self.filepaths:
@@ -263,13 +304,88 @@ class ResearchWindow:
                     filepath
                 )
 
+            feature_vector = []
+
+            for value in metrics.values():
+
+                if isinstance(
+                    value,
+                    (int, float)
+                ):
+
+                    feature_vector.append(
+                        float(value)
+                    )
+
             recordings.append({
 
                 "filepath": filepath,
 
-                "metrics": metrics
+                "metrics": metrics,
+
+                "feature_vector": feature_vector
             })
 
+            all_metrics.append(metrics)
+
+
+        # ---------------------------------
+        # BUILD INDIVIDUAL AUDIO TABLE
+        # ---------------------------------
+
+        for item in self.individual_tree.get_children():
+
+            self.individual_tree.delete(item)
+
+        metric_names = list(
+            all_metrics[0].keys()
+        )
+
+        columns = (
+            ["Audio"] +
+            metric_names +
+            ["Vector Length"]
+        )
+
+        self.individual_tree["columns"] = columns
+
+        for col in columns:
+
+            self.individual_tree.heading(
+                col,
+                text=col
+            )
+
+            self.individual_tree.column(
+                col,
+                width=120
+            )
+
+        for idx, metrics in enumerate(all_metrics):
+
+            row = [
+                f"Audio_{idx+1}"
+            ]
+
+            vector_length = len(
+                recordings[idx]["feature_vector"]
+            )
+
+            for metric in metric_names:
+
+                row.append(
+                    metrics[metric]
+                )
+
+            row.append(
+                vector_length
+            )
+
+            self.individual_tree.insert(
+                "",
+                "end",
+                values=row
+            )
         save_batch(
             batch_name,
             task,
@@ -292,8 +408,15 @@ class ResearchWindow:
                 "",
                 "end",
                 values=(
+
                     metric,
+
                     stats["mean"],
+
+                    stats["median"],
+
+                    stats["mode"],
+
                     f"± {stats['std']}"
                 )
             )
