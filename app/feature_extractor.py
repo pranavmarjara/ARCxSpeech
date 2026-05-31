@@ -266,7 +266,7 @@ def extract_vowel_features(filepath):
         )
     )
 
-    
+    vowel_metrics = {
 
         "F0 Mean": round(
             f0_mean,
@@ -285,6 +285,16 @@ def extract_vowel_features(filepath):
 
         "F0 Max": round(
             f0_max,
+            3
+        ),
+
+        "F1 Mean": round(
+            f1_mean,
+            3
+        ),
+
+        "F2 Mean": round(
+            f2_mean,
             3
         ),
 
