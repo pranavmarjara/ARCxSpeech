@@ -24,7 +24,12 @@ def load_research_data():
 def save_batch(
     batch_name,
     task,
-    recordings
+    recordings,
+    speaker_id,
+    device,
+    environment,
+    distance,
+    notes
 ):
 
     data = load_research_data()

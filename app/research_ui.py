@@ -60,6 +60,86 @@ class ResearchWindow:
 
         self.batch_entry.pack(pady=5)
 
+
+        # -------------------------
+        # SPEAKER ID
+        # -------------------------
+
+        tk.Label(
+            root,
+            text="Speaker ID"
+        ).pack()
+
+        self.speaker_entry = tk.Entry(
+            root,
+            width=40
+        )
+
+        self.speaker_entry.pack(pady=5)
+
+        # -------------------------
+        # DEVICE
+        # -------------------------
+
+        tk.Label(
+            root,
+            text="Device"
+        ).pack()
+
+        self.device_entry = tk.Entry(
+            root,
+            width=40
+        )
+
+        self.device_entry.pack(pady=5)
+
+        # -------------------------
+        # ENVIRONMENT
+        # -------------------------
+
+        tk.Label(
+            root,
+            text="Environment"
+        ).pack()
+
+        self.environment_entry = tk.Entry(
+            root,
+            width=40
+        )
+
+        self.environment_entry.pack(pady=5)
+
+        # -------------------------
+        # MIC DISTANCE
+        # -------------------------
+
+        tk.Label(
+            root,
+            text="Mic Distance (cm)"
+        ).pack()
+
+        self.distance_entry = tk.Entry(
+            root,
+            width=40
+        )
+
+        self.distance_entry.pack(pady=5)
+
+        # -------------------------
+        # NOTES
+        # -------------------------
+
+        tk.Label(
+            root,
+            text="Notes"
+        ).pack()
+
+        self.notes_entry = tk.Entry(
+            root,
+            width=60
+        )
+
+        self.notes_entry.pack(pady=5)
         # -------------------------
         # TASK
         # -------------------------
@@ -254,6 +334,15 @@ class ResearchWindow:
     def process_batch(self):
 
         batch_name = self.batch_entry.get()
+        speaker_id = self.speaker_entry.get()
+
+        device = self.device_entry.get()
+
+        environment = self.environment_entry.get()
+
+        distance = self.distance_entry.get()
+
+        notes = self.notes_entry.get()
 
         task = self.task_var.get()
 
@@ -389,7 +478,12 @@ class ResearchWindow:
         save_batch(
             batch_name,
             task,
-            recordings
+            recordings,
+            speaker_id,
+            device,
+            environment,
+            distance,
+            notes
         )
 
         data = load_research_data()

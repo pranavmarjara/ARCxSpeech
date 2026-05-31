@@ -152,6 +152,64 @@ def extract_vowel_features(filepath):
         filepath
     )
 
+    formant = snd.to_formant_burg()
+
+    times = formant.ts()
+
+    f1_values = []
+
+    f2_values = []
+
+    for t in times:
+
+        f1 = formant.get_value_at_time(
+            1,
+            t
+        )
+
+        f2 = formant.get_value_at_time(
+            2,
+            t
+        )
+
+        if not np.isnan(f1):
+
+            f1_values.append(
+                f1
+            )
+
+        if not np.isnan(f2):
+
+            f2_values.append(
+                f2
+            )
+
+
+    if len(f1_values) > 0:
+
+        f1_mean = float(
+            np.mean(
+                f1_values
+            )
+        )
+
+    else:
+
+        f1_mean = 0
+
+
+    if len(f2_values) > 0:
+
+        f2_mean = float(
+            np.mean(
+                f2_values
+            )
+        )
+
+    else:
+
+        f2_mean = 0
+
     harmonicity = snd.to_harmonicity()
 
     harmonicity_values = harmonicity.values[
@@ -196,7 +254,19 @@ def extract_vowel_features(filepath):
         1.6
     )
 
-    vowel_metrics = {
+    f0_range = f0_max - f0_min
+
+    pitch_variability = f0_std
+
+    intensity_variability = float(
+        np.std(
+            librosa.feature.rms(
+                y=y
+            )[0]
+        )
+    )
+
+    
 
         "F0 Mean": round(
             f0_mean,
@@ -225,6 +295,21 @@ def extract_vowel_features(filepath):
 
         "Jitter Local": round(
             jitter_local,
+            6
+        ),
+
+        "F0 Range": round(
+            f0_range,
+            3
+        ),
+
+        "Pitch Variability": round(
+            pitch_variability,
+            3
+        ),
+
+        "Intensity Variability": round(
+            intensity_variability,
             6
         ),
 
@@ -266,6 +351,76 @@ def extract_ddk_features(filepath):
         y_16k
     )
 
+    threshold = np.mean(
+        envelope
+    )
+
+    speech_frames = (
+        envelope > threshold
+    )
+
+    speech_time = (
+        np.sum(
+            speech_frames
+        ) / 16000
+    )
+
+    pause_time = max(
+        duration - speech_time,
+        0
+    )
+
+    if speech_time > 0:
+
+        pause_ratio = (
+            pause_time /
+            speech_time
+        )
+
+    else:
+
+        pause_ratio = 0
+
+
+    pause_segments = []
+
+    in_pause = False
+
+    pause_start = 0
+
+    for i, frame in enumerate(
+        speech_frames
+    ):
+
+        if not frame and not in_pause:
+
+            pause_start = i
+
+            in_pause = True
+
+        elif frame and in_pause:
+
+            pause_segments.append(
+                (
+                    i - pause_start
+                ) / 16000
+            )
+
+            in_pause = False
+
+
+    if len(pause_segments) > 0:
+
+        mean_pause_duration = float(
+            np.mean(
+                pause_segments
+            )
+        )
+
+    else:
+
+        mean_pause_duration = 0
+
     peaks, _ = find_peaks(
         envelope,
         distance=16000 // 4,
@@ -276,7 +431,9 @@ def extract_ddk_features(filepath):
 
     if repetition_count > 1:
 
-        intervals = np.diff(peaks) / 16000
+        intervals = np.diff(
+            peaks
+        ) / 16000
 
         repetition_rate = (
             repetition_count / duration
@@ -290,11 +447,21 @@ def extract_ddk_features(filepath):
             np.std(intervals)
         )
 
+        ddk_regularity = interval_std
+
+        speech_rate = repetition_rate
+
     else:
 
         repetition_rate = 0
+
         interval_mean = 0
+
         interval_std = 0
+
+        ddk_regularity = 0
+
+        speech_rate = 0
 
     ddk_metrics = {
 
@@ -307,6 +474,26 @@ def extract_ddk_features(filepath):
 
         "DDK Interval Mean": round(
             interval_mean,
+            3
+        ),
+
+        "DDK Regularity": round(
+            ddk_regularity,
+            3
+        ),
+
+        "Speech Rate": round(
+            speech_rate,
+            3
+        ),
+
+        "Mean Pause Duration": round(
+            mean_pause_duration,
+            3
+        ),
+
+        "Pause/Speech Ratio": round(
+            pause_ratio,
             3
         ),
 

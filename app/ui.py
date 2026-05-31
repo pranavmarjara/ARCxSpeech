@@ -57,6 +57,55 @@ class ARCxSpeechUI:
 
         self.patient_entry.pack(pady=5)
 
+
+        # -----------------------------
+        # AGE
+        # -----------------------------
+
+        age_label = tk.Label(
+            root,
+            text="Age",
+            font=("Arial", 12, "bold")
+        )
+
+        age_label.pack(pady=5)
+
+        self.age_entry = tk.Entry(
+            root,
+            width=40
+        )
+
+        self.age_entry.pack(pady=5)
+
+        # -----------------------------
+        # SEX
+        # -----------------------------
+
+        sex_label = tk.Label(
+            root,
+            text="Sex",
+            font=("Arial", 12, "bold")
+        )
+
+        sex_label.pack(pady=5)
+
+        self.sex_var = tk.StringVar()
+
+        self.sex_dropdown = ttk.Combobox(
+            root,
+            textvariable=self.sex_var,
+            values=[
+                "Male",
+                "Female",
+                "Other"
+            ],
+            state="readonly",
+            width=37
+        )
+
+        self.sex_dropdown.pack(pady=5)
+
+
         # -----------------------------
         # TASK TYPE
         # -----------------------------
@@ -192,9 +241,14 @@ class ARCxSpeechUI:
 
         patient_name = self.patient_entry.get()
 
+        age = self.age_entry.get()
+
+        sex = self.sex_var.get()
+
         task = self.task_var.get()
 
-        if not patient_name or not task:
+        if not patient_name or not age or not sex or not task:
+    
             return
 
         if task == "Sustained Vowel":
@@ -215,11 +269,14 @@ class ARCxSpeechUI:
 
         task = self.task_var.get()
 
-        if not patient_name or not task:
+        if not patient_name or not age or not sex or not task:
+    
             return
 
         save_session(
             patient_name,
+            age,
+            sex,
             task,
             metrics
         )

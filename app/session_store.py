@@ -16,7 +16,13 @@ def load_sessions():
         return json.load(f)
 
 
-def save_session(patient_name, task, metrics):
+def save_session(
+    patient_name,
+    age,
+    sex,
+    task,
+    metrics
+):
 
     data = load_sessions()
 
@@ -27,7 +33,13 @@ def save_session(patient_name, task, metrics):
         "timestamp": datetime.now().strftime(
             "%Y-%m-%d %H:%M:%S"
         ),
+
+        "age": age,
+
+        "sex": sex,
+
         "task": task,
+
         "metrics": metrics
     }
 
