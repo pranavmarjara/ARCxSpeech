@@ -1,6 +1,6 @@
-venv/
 __pycache__/
 *.pyc
+venv/
 recordings/
-sessions.json
+clinical_assessments.json
 research_sessions.json

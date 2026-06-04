@@ -3,16 +3,42 @@ import tkinter as tk
 from tkinter import simpledialog
 from tkinter import messagebox
 
-from app.ui import ARCxSpeechUI
-from app.history_ui import HistoryWindow
 
 from app.research_ui import ResearchWindow
+
+from app.assessment_ui import AssessmentWindow
+
+from app.clinical_history_ui import (
+    ClinicalHistoryWindow
+)
+
 
 root = tk.Tk()
 
 root.title("ARCxSpeech")
 
 root.geometry("400x300")
+
+
+
+def open_clinical_history():
+
+    history_window = tk.Toplevel(
+        root
+    )
+
+    ClinicalHistoryWindow(
+        history_window
+    )
+
+
+def open_assessment():
+
+    assessment_window = tk.Toplevel(root)
+
+    AssessmentWindow(
+        assessment_window
+    )
 
 def open_research():
 
@@ -22,18 +48,10 @@ def open_research():
         research_window
     )
 
-def open_analysis():
-
-    analysis_window = tk.Toplevel(root)
-
-    ARCxSpeechUI(analysis_window)
 
 
-def open_history():
 
-    history_window = tk.Toplevel(root)
 
-    HistoryWindow(history_window)
 
 
 title = tk.Label(
@@ -44,25 +62,36 @@ title = tk.Label(
 
 title.pack(pady=30)
 
-analysis_btn = tk.Button(
+assessment_btn = tk.Button(
     root,
-    text="Open Analysis",
-    command=open_analysis,
+    text="Open Clinical Assessment",
+    command=open_assessment,
     width=25,
     height=2
 )
 
-analysis_btn.pack(pady=15)
+assessment_btn.pack(pady=15)
 
-history_btn = tk.Button(
+
+clinical_history_btn = tk.Button(
+
     root,
-    text="Open History",
-    command=open_history,
+
+    text="Open Clinical History",
+
+    command=open_clinical_history,
+
     width=25,
+
     height=2
+
 )
 
-history_btn.pack(pady=15)
+clinical_history_btn.pack(
+    pady=15
+)
+
+
 
 research_btn = tk.Button(
     root,

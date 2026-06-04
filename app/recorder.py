@@ -6,36 +6,65 @@ import os
 from app.config import (
     SAMPLE_RATE,
     CHANNELS,
-    DURATION,
     OUTPUT_DIR
 )
 
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+os.makedirs(
+    OUTPUT_DIR,
+    exist_ok=True
+)
 
 
-def record_audio():
+def record_audio(
+    duration,
+    prefix="clinical"
+):
 
-    timestamp = int(time.time())
+    timestamp = int(
+        time.time()
+    )
 
-    filename = f"{OUTPUT_DIR}/clinical_{timestamp}.wav"
+    filename = (
+        f"{OUTPUT_DIR}/"
+        f"{prefix}_{timestamp}.wav"
+    )
 
-    print("\nRecording started...")
+    print(
+        "\nRecording started..."
+    )
 
     audio = sd.rec(
-        int(DURATION * SAMPLE_RATE),
+
+        int(
+            duration *
+            SAMPLE_RATE
+        ),
+
         samplerate=SAMPLE_RATE,
+
         channels=CHANNELS,
-        dtype='float32',
+
+        dtype="float32",
+
         blocking=True
     )
 
-    print("Recording completed.")
-
-    sf.write(
-        filename,
-        audio,
-        SAMPLE_RATE,
-        subtype='PCM_24'
+    print(
+        "Recording completed."
     )
 
-    return filename, audio
+    sf.write(
+
+        filename,
+
+        audio,
+
+        SAMPLE_RATE,
+
+        subtype="PCM_24"
+    )
+
+    return (
+        filename,
+        audio
+    )

@@ -100,6 +100,16 @@ def save_batch(
 
         "task": task,
 
+        "speaker_id": speaker_id,
+
+        "device": device,
+
+        "environment": environment,
+
+        "distance_cm": distance,
+
+        "notes": notes,
+
         "recordings": recordings,
 
         "aggregate": aggregate
