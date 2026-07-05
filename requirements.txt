@@ -7,3 +7,4 @@ soundfile
 matplotlib
 pandas
 openpyxl
+pyserial
