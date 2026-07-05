@@ -1,16 +1,11 @@
 .venv/
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
-
-.vscode/
-.idea/
 
 recordings/
 research_recordings/
 
-*.log
+.vscode/
+.idea/
 
-.DS_Store
-Thumbs.db
+*.log
