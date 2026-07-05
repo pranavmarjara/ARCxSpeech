@@ -17,6 +17,10 @@ from app.feature_extractor import (
     extract_ddk_features
 )
 
+from app.ambient_analyzer import (
+    extract_ambient_metrics
+)
+
 from app.assessment_store import (
     save_assessment
 )
@@ -38,7 +42,9 @@ class AssessmentResultsWindow:
         vowel_mean,
         vowel_sd,
         ddk_mean,
-        ddk_sd
+        ddk_sd,
+        ambient_mean,
+        ambient_sd
     ):
 
         self.root = root
@@ -48,9 +54,10 @@ class AssessmentResultsWindow:
         )
 
         self.root.geometry(
-            "900x700"
+            "1100x700"
         )
-
+        
+        
         tk.Label(
             root,
             text="ASSESSMENT INFORMATION",
@@ -93,6 +100,31 @@ class AssessmentResultsWindow:
                 tk.END,
                 f"{key}: {value} ± {sd}\n"
             )
+
+
+        tk.Label(
+            root,
+            text="AMBIENT ANALYSIS",
+            font=("Arial", 14, "bold")
+        ).pack(pady=10)
+
+        ambient_text = tk.Text(
+            root,
+            height=10,
+            width=70
+        )
+
+        ambient_text.pack()
+
+        for key, value in ambient_mean.items():
+
+            sd = ambient_sd.get(key, 0)
+
+            ambient_text.insert(
+                tk.END,
+                f"{key}: {value} ± {sd}\n"
+            )
+
 
         tk.Label(
             root,
@@ -579,6 +611,25 @@ class AssessmentWindow:
                 )
             )
 
+        ambient_results = []
+
+        all_files = self.vowel_files + self.ddk_files
+
+        for file in all_files:
+
+            ambient_results.append(
+                extract_ambient_metrics(
+                    file
+                )
+            )
+
+        ambient_mean = self.average_metrics(
+            ambient_results
+        )
+
+        ambient_sd = self.metric_sd(
+            ambient_results
+        )
         vowel_mean = self.average_metrics(
             vowel_results
         )
@@ -613,13 +664,17 @@ class AssessmentWindow:
 
             ddk_mean,
 
+            ambient_mean,
+
             self.vowel_files,
 
             self.ddk_files,
 
             vowel_sd,
 
-            ddk_sd
+            ddk_sd,
+
+            ambient_sd
         )
 
         from datetime import datetime
@@ -636,7 +691,9 @@ class AssessmentWindow:
             vowel_mean,
             vowel_sd,
             ddk_mean,
-            ddk_sd
+            ddk_sd,
+            ambient_mean,
+            ambient_sd
         )
 
     def show_results(
@@ -648,7 +705,9 @@ class AssessmentWindow:
         vowel_mean,
         vowel_sd,
         ddk_mean,
-        ddk_sd
+        ddk_sd,
+        ambient_mean,
+        ambient_sd
     ):
 
         open_child_window(
@@ -661,7 +720,9 @@ class AssessmentWindow:
             vowel_mean,
             vowel_sd,
             ddk_mean,
-            ddk_sd
+            ddk_sd,
+            ambient_mean,
+            ambient_sd
         )
 
     def average_metrics(

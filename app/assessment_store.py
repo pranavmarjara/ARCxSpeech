@@ -44,13 +44,17 @@ def save_assessment(
 
     ddk_mean,
 
+    ambient_mean,
+
     vowel_recordings,
 
     ddk_recordings,
 
     vowel_sd=None,
 
-    ddk_sd=None
+    ddk_sd=None,
+
+    ambient_sd=None
 ):
 
     data = load_assessments()
@@ -77,13 +81,17 @@ def save_assessment(
 
         "ddk_mean": ddk_mean,
 
+        "ambient_mean": ambient_mean,
+
         "vowel_recordings": vowel_recordings,
 
         "ddk_recordings": ddk_recordings,
 
         "vowel_sd": vowel_sd or {},
 
-        "ddk_sd": ddk_sd or {}
+        "ddk_sd": ddk_sd or {},
+
+        "ambient_sd": ambient_sd or {}
     }
 
     data.append(

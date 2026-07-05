@@ -1,7 +1,23 @@
+# ===========================
+# Audio Configuration
+# ===========================
+
 SAMPLE_RATE = 48000
-CHANNELS = 1
+
+CHANNELS = 2
+
+BIT_DEPTH = 16
+
+PATIENT_CHANNEL = 0
+
+AMBIENT_CHANNEL = 1
+
+SERIAL_PORT = "COM8"
+
+SERIAL_BAUD = 2000000
 
 VOWEL_DURATION = 5
+
 DDK_DURATION = 10
 
 OUTPUT_DIR = "recordings"

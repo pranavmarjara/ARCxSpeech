@@ -29,18 +29,153 @@ class AssessmentDetailWindow:
 
         text = tk.Text(
             root,
-            width=120,
-            height=50
+            width=140,
+            height=45,
+            font=("Consolas", 10)
         )
 
-        text.pack(pady=(45, 5))
+        text.pack(
+            fill="both",
+            expand=True,
+            padx=15,
+            pady=15
+        )
 
         text.insert(
             tk.END,
-            json.dumps(
-                assessment,
-                indent=4
+            "==============================\n"
+        )
+
+        text.insert(
+            tk.END,
+            "PATIENT INFORMATION\n"
+        )
+
+        text.insert(
+            tk.END,
+            "==============================\n\n"
+        )
+
+        text.insert(
+            tk.END,
+            f"Patient Name : {assessment['patient_name']}\n"
+        )
+
+        text.insert(
+            tk.END,
+            f"Patient ID   : {assessment['patient_id']}\n"
+        )
+
+        text.insert(
+            tk.END,
+            f"Age          : {assessment['age']}\n"
+        )
+
+        text.insert(
+            tk.END,
+            f"Sex          : {assessment['sex']}\n"
+        )
+
+        text.insert(
+            tk.END,
+            f"Assessment   : {assessment['timestamp']}\n\n"
+        )
+
+        text.insert(
+            tk.END,
+            "==============================\n"
+        )
+
+        text.insert(
+            tk.END,
+            "SUSTAINED VOWEL\n"
+        )
+
+        text.insert(
+            tk.END,
+            "==============================\n\n"
+        )
+
+        for key, value in assessment["vowel_mean"].items():
+
+            sd = assessment.get(
+                "vowel_sd",
+                {}
+            ).get(
+                key,
+                0
             )
+
+            text.insert(
+                tk.END,
+                f"{key:<30}{value} ± {sd}\n"
+            )
+
+        text.insert(
+            tk.END,
+            "\n==============================\n"
+        )
+
+        text.insert(
+            tk.END,
+            "DDK ANALYSIS\n"
+        )
+
+        text.insert(
+            tk.END,
+            "==============================\n\n"
+        )
+
+        for key, value in assessment["ddk_mean"].items():
+
+            sd = assessment.get(
+                "ddk_sd",
+                {}
+            ).get(
+                key,
+                0
+            )
+
+            text.insert(
+                tk.END,
+                f"{key:<30}{value} ± {sd}\n"
+            )
+
+        text.insert(
+            tk.END,
+            "\n==============================\n"
+        )
+
+        text.insert(
+            tk.END,
+            "AMBIENT ANALYSIS\n"
+        )
+
+        text.insert(
+            tk.END,
+            "==============================\n\n"
+        )
+
+        for key, value in assessment.get(
+            "ambient_mean",
+            {}
+        ).items():
+
+            sd = assessment.get(
+                "ambient_sd",
+                {}
+            ).get(
+                key,
+                0
+            )
+
+            text.insert(
+                tk.END,
+                f"{key:<30}{value} ± {sd}\n"
+            )
+
+        text.config(
+            state="disabled"
         )
 
 

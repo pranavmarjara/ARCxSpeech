@@ -2,6 +2,11 @@ import librosa
 import numpy as np
 import parselmouth
 
+from app.config import (
+    PATIENT_CHANNEL,
+    AMBIENT_CHANNEL
+)
+
 from scipy.signal import find_peaks
 
 
@@ -11,17 +16,36 @@ from scipy.signal import find_peaks
 
 def load_audio(filepath):
 
-    y, sr = librosa.load(
+    # Load stereo audio without converting to mono
+    audio, sr = librosa.load(
         filepath,
-        sr=None
+        sr=None,
+        mono=False
     )
 
+    # If mono recording somehow arrives,
+    # keep backward compatibility.
+    if audio.ndim == 1:
+
+        patient_audio = audio
+        ambient_audio = np.zeros_like(audio)
+
+    else:
+
+        patient_audio = audio[PATIENT_CHANNEL]
+        ambient_audio = audio[AMBIENT_CHANNEL]
+
     duration = librosa.get_duration(
-        y=y,
+        y=patient_audio,
         sr=sr
     )
 
-    return y, sr, duration
+    return (
+        patient_audio,
+        ambient_audio,
+        sr,
+        duration
+    )
 
 
 # =====================================
@@ -165,14 +189,14 @@ def count_syllable_nuclei(filepath):
 
 def extract_vowel_features(filepath):
 
-    y, sr, duration = load_audio(
+    patient_audio, ambient_audio, sr, duration = load_audio(
         filepath
     )
 
     # Downsample for pitch tracking
 
     y_16k = librosa.resample(
-        y,
+        patient_audio,    
         orig_sr=sr,
         target_sr=16000
     )
@@ -365,12 +389,12 @@ def extract_vowel_features(filepath):
 
 def extract_ddk_features(filepath):
 
-    y, sr, duration = load_audio(
+    patient_audio, ambient_audio, sr, duration = load_audio(
         filepath
     )
 
     y_16k = librosa.resample(
-        y,
+        patient_audio,
         orig_sr=sr,
         target_sr=16000
     )

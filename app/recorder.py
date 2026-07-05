@@ -1,12 +1,15 @@
-import sounddevice as sd
-import soundfile as sf
-import time
 import os
+import time
+import serial
+import numpy as np
+import soundfile as sf
 
 from app.config import (
     SAMPLE_RATE,
     CHANNELS,
-    OUTPUT_DIR
+    OUTPUT_DIR,
+    SERIAL_PORT,
+    SERIAL_BAUD
 )
 
 os.makedirs(
@@ -20,48 +23,82 @@ def record_audio(
     prefix="clinical"
 ):
 
-    timestamp = int(
-        time.time()
-    )
+    timestamp = int(time.time())
 
     filename = (
         f"{OUTPUT_DIR}/"
         f"{prefix}_{timestamp}.wav"
     )
 
-    print(
-        "\nRecording started..."
+    total_samples = int(
+        SAMPLE_RATE * duration
     )
 
-    audio = sd.rec(
-
-        int(
-            duration *
-            SAMPLE_RATE
-        ),
-
-        samplerate=SAMPLE_RATE,
-
-        channels=CHANNELS,
-
-        dtype="float32",
-
-        blocking=True
+    total_int16_values = (
+        total_samples *
+        CHANNELS
     )
 
-    print(
-        "Recording completed."
+    total_bytes = (
+        total_int16_values *
+        2
+    )
+
+    print("\nOpening serial port...")
+
+    ser = serial.Serial(
+        SERIAL_PORT,
+        SERIAL_BAUD,
+        timeout=5
+    )
+
+    time.sleep(2)
+
+    ser.reset_input_buffer()
+
+    print("Recording started...")
+
+    raw = bytearray()
+
+    while len(raw) < total_bytes:
+
+        remaining = total_bytes - len(raw)
+
+        chunk = ser.read(
+            min(
+                4096,
+                remaining
+            )
+        )
+
+        if len(chunk) == 0:
+            continue
+
+        raw.extend(chunk)
+
+    ser.close()
+
+    print("Recording completed.")
+
+    audio = np.frombuffer(
+        raw,
+        dtype=np.int16
+    )
+
+    audio = audio.reshape(
+        (-1, CHANNELS)
+    )
+
+    audio = (
+        audio.astype(np.float32)
+        / 32768.0
     )
 
     sf.write(
-
         filename,
-
         audio,
-
         SAMPLE_RATE,
-
-        subtype="PCM_24"
+        subtype="PCM_16"
     )
 
     return (
