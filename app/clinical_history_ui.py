@@ -7,7 +7,41 @@ from collections import defaultdict
 
 from tkinter import messagebox
 
+from app.window_nav import open_child_window
+from app.config import DDK_DURATION
+
 ASSESSMENT_FILE = "clinical_assessments.json"
+
+
+class AssessmentDetailWindow:
+
+    def __init__(self, root, assessment):
+
+        self.root = root
+
+        self.root.title(
+            "Assessment Details"
+        )
+
+        self.root.geometry(
+            "1000x800"
+        )
+
+        text = tk.Text(
+            root,
+            width=120,
+            height=50
+        )
+
+        text.pack(pady=(45, 5))
+
+        text.insert(
+            tk.END,
+            json.dumps(
+                assessment,
+                indent=4
+            )
+        )
 
 
 class ClinicalHistoryWindow:
@@ -143,45 +177,14 @@ class ClinicalHistoryWindow:
             index
         ]
 
-        window = tk.Toplevel(
-            self.root
-        )
-
-        window.title(
-            "Assessment Details"
-        )
-
-        window.geometry(
-            "1000x800"
-        )
-
-        text = tk.Text(
-            window,
-            width=120,
-            height=50
-        )
-
-        text.pack()
-
-        text.insert(
-            tk.END,
-            json.dumps(
-                assessment,
-                indent=4
-            )
+        open_child_window(
+            self.root,
+            AssessmentDetailWindow,
+            assessment
         )
 
 
     def show_trends(self):
-
-        if len(patient_records) < 2:
-
-            messagebox.showinfo(
-                "Not Enough Data",
-                "At least 2 assessments are needed for longitudinal trends."
-            )
-
-            return
 
         selection = self.listbox.curselection()
 
@@ -203,6 +206,15 @@ class ClinicalHistoryWindow:
                 patient_records.append(
                     assessment
                 )
+
+        if len(patient_records) < 2:
+
+            messagebox.showinfo(
+                "Not Enough Data",
+                "At least 2 assessments are needed for longitudinal trends."
+            )
+
+            return
 
         patient_records.sort(
             key=lambda x: x["timestamp"]
@@ -243,14 +255,26 @@ class ClinicalHistoryWindow:
                 vowel.get("F0 Mean", 0)
             )
 
+            # "F0 Range" only exists in assessments saved by an older
+            # feature_extractor.py schema. It's trivially derivable from
+            # F0 Max/Min (present in both old and current schema), so
+            # compute it directly instead of relying on the stored key
+            # (which is always missing/0 for current-schema records).
             f0_range_values.append(
-                vowel.get("F0 Range", 0)
+                vowel.get(
+                    "F0 Range",
+                    vowel.get("F0 Max", 0) - vowel.get("F0 Min", 0)
+                )
             )
 
+            # "Pitch Variability" likewise only exists in the old schema.
+            # For current-schema assessments, fall back to the stored
+            # per-visit F0 standard deviation across the 3 vowel trials
+            # (record["vowel_sd"]), if present.
             pitch_var_values.append(
                 vowel.get(
                     "Pitch Variability",
-                    0
+                    record.get("vowel_sd", {}).get("F0 Mean", 0)
                 )
             )
 
@@ -300,11 +324,30 @@ class ClinicalHistoryWindow:
                 )
             )
 
-            pause_values.append(
-                ddk.get(
-                    "Mean Pause Duration",
+            # "Mean Pause Duration" (seconds) only exists in the old
+            # schema. The current schema only stores "Pause/Speech
+            # Ratio", from which pause duration can be derived using the
+            # fixed DDK recording length: pause_ratio = pause / speech,
+            # and pause + speech = total duration, so
+            # pause = total_duration * ratio / (1 + ratio).
+            if "Mean Pause Duration" in ddk:
+
+                pause_duration = ddk["Mean Pause Duration"]
+
+            else:
+
+                pause_speech_ratio = ddk.get(
+                    "Pause/Speech Ratio",
                     0
                 )
+
+                pause_duration = (
+                    DDK_DURATION * pause_speech_ratio
+                    / (1 + pause_speech_ratio)
+                )
+
+            pause_values.append(
+                pause_duration
             )
 
             pause_ratio_values.append(

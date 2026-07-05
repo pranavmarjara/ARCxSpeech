@@ -1,6 +1,5 @@
 import tkinter as tk
 
-from tkinter import simpledialog
 from tkinter import messagebox
 
 
@@ -11,6 +10,8 @@ from app.assessment_ui import AssessmentWindow
 from app.clinical_history_ui import (
     ClinicalHistoryWindow
 )
+
+from app.window_nav import open_child_window
 
 
 root = tk.Tk()
@@ -23,30 +24,39 @@ root.geometry("400x300")
 
 def open_clinical_history():
 
-    history_window = tk.Toplevel(
-        root
-    )
-
-    ClinicalHistoryWindow(
-        history_window
-    )
+    open_child_window(root, ClinicalHistoryWindow)
 
 
 def open_assessment():
 
-    assessment_window = tk.Toplevel(root)
+    open_child_window(root, AssessmentWindow)
 
-    AssessmentWindow(
-        assessment_window
-    )
 
 def open_research():
 
-    research_window = tk.Toplevel(root)
+    open_child_window(root, ResearchWindow)
 
-    ResearchWindow(
-        research_window
-    )
+
+def on_root_closing():
+    child = getattr(root, "_active_child", None)
+    child_open = child is not None and child.winfo_exists()
+
+    if child_open:
+        confirm = messagebox.askyesno(
+            "Close ARCxSpeech?",
+            "A window is currently open (Assessment / History / R&D). "
+            "Closing the dashboard will close it too and any unsaved "
+            "work will be lost.\n\n"
+            "Are you sure you want to quit?"
+        )
+
+        if not confirm:
+            return
+
+    root.destroy()
+
+
+root.protocol("WM_DELETE_WINDOW", on_root_closing)
 
 
 

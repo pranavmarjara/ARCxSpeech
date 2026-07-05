@@ -25,75 +25,148 @@ def load_audio(filepath):
 
 
 # =====================================
-# COMMON FEATURES
+# SYLLABLE NUCLEI DETECTOR
+#
+# Intensity-peak method (based on de Jong & Wempe, 2009):
+# 1. Find local intensity maxima above a dynamic silence threshold.
+# 2. Merge peaks not separated by a sufficient intensity dip
+#    (avoids double-counting a single syllable).
+# 3. Keep only peaks landing on a voiced (pitched) frame.
+# Used exclusively for Speech Rate, independent of the DDK
+# amplitude-peak detector used for DDK Repetition Rate/Count.
 # =====================================
 
-def extract_common_features(y, sr, duration):
+def count_syllable_nuclei(filepath):
 
-    rms = librosa.feature.rms(y=y)[0]
+    silence_db = -25
 
-    zcr = librosa.feature.zero_crossing_rate(y)[0]
+    min_dip_db = 2
 
-    centroid = librosa.feature.spectral_centroid(
-        y=y,
-        sr=sr
-    )[0]
+    snd = parselmouth.Sound(
+        filepath
+    )
 
-    rolloff = librosa.feature.spectral_rolloff(
-        y=y,
-        sr=sr
-    )[0]
+    intensity = snd.to_intensity(
+        minimum_pitch=100.0
+    )
 
-    return {
+    intensity_values = intensity.values[0]
 
-        "Sample Rate": sr,
+    intensity_times = intensity.xs()
 
-        "Duration (sec)": round(
-            duration,
-            3
-        ),
+    if len(intensity_values) == 0:
 
-        "RMS Mean": round(
-            float(np.mean(rms)),
-            6
-        ),
+        return 0
 
-        "RMS Std": round(
-            float(np.std(rms)),
-            6
-        ),
+    max_intensity = np.max(
+        intensity_values
+    )
 
-        "ZCR Mean": round(
-            float(np.mean(zcr)),
-            6
-        ),
+    max_99_intensity = np.percentile(
+        intensity_values,
+        99
+    )
 
-        "Spectral Centroid": round(
-            float(np.mean(centroid)),
-            3
-        ),
+    threshold = max_99_intensity + silence_db
 
-        "Spectral Rolloff": round(
-            float(np.mean(rolloff)),
-            3
+    threshold = max(
+        threshold,
+        np.min(intensity_values)
+    )
+
+    # Minimum spacing between candidate syllable peaks (~50ms),
+    # guards against noise-driven micro-peaks inflating the count.
+
+    if len(intensity_times) > 1:
+
+        time_step = float(
+            intensity_times[1] - intensity_times[0]
         )
-    }
+
+    else:
+
+        time_step = 0.01
+
+    min_distance = max(
+        int(0.05 / time_step),
+        1
+    )
+
+    peak_indices, _ = find_peaks(
+        intensity_values,
+        height=threshold,
+        distance=min_distance
+    )
+
+    if len(peak_indices) == 0:
+
+        return 0
+
+    # Merge candidate peaks that aren't separated by a big
+    # enough intensity dip, keeping the stronger of the two.
+
+    valid_peak_indices = [
+        peak_indices[0]
+    ]
+
+    for idx in peak_indices[1:]:
+
+        prev_idx = valid_peak_indices[-1]
+
+        between = intensity_values[prev_idx:idx + 1]
+
+        dip = np.min(between)
+
+        separated = (
+            (intensity_values[prev_idx] - dip) > min_dip_db
+            or (intensity_values[idx] - dip) > min_dip_db
+        )
+
+        if separated:
+
+            valid_peak_indices.append(idx)
+
+        else:
+
+            if intensity_values[idx] > intensity_values[prev_idx]:
+
+                valid_peak_indices[-1] = idx
+
+    # Voicing check: keep only peaks on voiced (pitched) frames,
+    # to discard non-speech intensity bursts.
+
+    pitch = snd.to_pitch(
+        time_step=0.01,
+        pitch_floor=75,
+        pitch_ceiling=500
+    )
+
+    nsyll = 0
+
+    for idx in valid_peak_indices:
+
+        t = intensity_times[idx]
+
+        f0_at_t = pitch.get_value_at_time(t)
+
+        if not np.isnan(f0_at_t) and f0_at_t > 0:
+
+            nsyll += 1
+
+    return nsyll
 
 
 # =====================================
 # SUSTAINED VOWEL FEATURES
+#
+# Kept: F0 Mean, HNR (primary)
+#       Jitter Local, F0 Min, F0 Max, F1 Mean, F2 Mean (secondary)
 # =====================================
 
 def extract_vowel_features(filepath):
 
     y, sr, duration = load_audio(
         filepath
-    )
-
-    common = extract_common_features(
-        y,
-        sr,
-        duration
     )
 
     # Downsample for pitch tracking
@@ -125,10 +198,6 @@ def extract_vowel_features(filepath):
             np.mean(f0_clean)
         )
 
-        f0_std = float(
-            np.std(f0_clean)
-        )
-
         f0_min = float(
             np.min(f0_clean)
         )
@@ -140,7 +209,6 @@ def extract_vowel_features(filepath):
     else:
 
         f0_mean = 0
-        f0_std = 0
         f0_min = 0
         f0_max = 0
 
@@ -184,7 +252,6 @@ def extract_vowel_features(filepath):
                 f2
             )
 
-
     if len(f1_values) > 0:
 
         f1_mean = float(
@@ -196,7 +263,6 @@ def extract_vowel_features(filepath):
     else:
 
         f1_mean = 0
-
 
     if len(f2_values) > 0:
 
@@ -243,38 +309,15 @@ def extract_vowel_features(filepath):
         1.3
     )
 
-    shimmer_local = parselmouth.praat.call(
-        [snd, point_process],
-        "Get shimmer (local)",
-        0,
-        0,
-        0.0001,
-        0.02,
-        1.3,
-        1.6
-    )
-
-    f0_range = f0_max - f0_min
-
-    pitch_variability = f0_std
-
-    intensity_variability = float(
-        np.std(
-            librosa.feature.rms(
-                y=y
-            )[0]
-        )
-    )
+    # Praat returns local jitter as a raw fraction (e.g. 0.012).
+    # Correct formula requires it expressed as a percentage:
+    # (mean(|Ti - Ti-1|) / mean(T)) x 100
+    jitter_local = jitter_local * 100
 
     vowel_metrics = {
 
         "F0 Mean": round(
             f0_mean,
-            3
-        ),
-
-        "F0 Std": round(
-            f0_std,
             3
         ),
 
@@ -306,49 +349,24 @@ def extract_vowel_features(filepath):
         "Jitter Local": round(
             jitter_local,
             6
-        ),
-
-        "F0 Range": round(
-            f0_range,
-            3
-        ),
-
-        "Pitch Variability": round(
-            pitch_variability,
-            3
-        ),
-
-        "Intensity Variability": round(
-            intensity_variability,
-            6
-        ),
-
-        "Shimmer Local": round(
-            shimmer_local,
-            6
         )
     }
 
-    return {
-        **common,
-        **vowel_metrics
-    }
+    return vowel_metrics
 
 
 # =====================================
 # DDK FEATURES
+#
+# Kept: DDK Repetition Rate, DDK Repetition Count, DDK Interval Mean,
+#       DDK Regularity, Speech Rate, Pause/Speech Ratio (primary)
+#       DDK Interval Std (secondary)
 # =====================================
 
 def extract_ddk_features(filepath):
 
     y, sr, duration = load_audio(
         filepath
-    )
-
-    common = extract_common_features(
-        y,
-        sr,
-        duration
     )
 
     y_16k = librosa.resample(
@@ -391,46 +409,6 @@ def extract_ddk_features(filepath):
 
         pause_ratio = 0
 
-
-    pause_segments = []
-
-    in_pause = False
-
-    pause_start = 0
-
-    for i, frame in enumerate(
-        speech_frames
-    ):
-
-        if not frame and not in_pause:
-
-            pause_start = i
-
-            in_pause = True
-
-        elif frame and in_pause:
-
-            pause_segments.append(
-                (
-                    i - pause_start
-                ) / 16000
-            )
-
-            in_pause = False
-
-
-    if len(pause_segments) > 0:
-
-        mean_pause_duration = float(
-            np.mean(
-                pause_segments
-            )
-        )
-
-    else:
-
-        mean_pause_duration = 0
-
     peaks, _ = find_peaks(
         envelope,
         distance=16000 // 4,
@@ -457,9 +435,18 @@ def extract_ddk_features(filepath):
             np.std(intervals)
         )
 
-        ddk_regularity = interval_std
+        # DDK Regularity = coefficient of variation of intervals (%)
+        # (std(intervals) / mean(intervals)) x 100
+        # Lower value = more regular timing.
+        if interval_mean > 0:
 
-        speech_rate = repetition_rate
+            ddk_regularity = (
+                interval_std / interval_mean
+            ) * 100
+
+        else:
+
+            ddk_regularity = 0
 
     else:
 
@@ -470,6 +457,21 @@ def extract_ddk_features(filepath):
         interval_std = 0
 
         ddk_regularity = 0
+
+    # -------------------------
+    # SPEECH RATE (independent of DDK repetition detection)
+    # Speech Rate = number_of_syllables / total_speech_sample_duration_seconds
+    # -------------------------
+
+    syllable_count = count_syllable_nuclei(
+        filepath
+    )
+
+    if duration > 0:
+
+        speech_rate = syllable_count / duration
+
+    else:
 
         speech_rate = 0
 
@@ -497,10 +499,7 @@ def extract_ddk_features(filepath):
             3
         ),
 
-        "Mean Pause Duration": round(
-            mean_pause_duration,
-            3
-        ),
+        "Syllable Count": syllable_count,
 
         "Pause/Speech Ratio": round(
             pause_ratio,
@@ -513,7 +512,4 @@ def extract_ddk_features(filepath):
         )
     }
 
-    return {
-        **common,
-        **ddk_metrics
-    }
+    return ddk_metrics

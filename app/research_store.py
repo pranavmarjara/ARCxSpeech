@@ -3,6 +3,7 @@ import os
 import numpy as np
 from statistics import mode
 from statistics import StatisticsError
+from collections import Counter
 import math
 from sklearn.decomposition import PCA
 
@@ -21,28 +22,16 @@ def load_research_data():
         return json.load(f)
 
 
-def save_batch(
-    batch_name,
-    task,
-    recordings,
-    speaker_id,
-    device,
-    environment,
-    distance,
-    notes
-):
-
-    data = load_research_data()
-
-    batch_metrics = []
-
-    for recording in recordings:
-
-        batch_metrics.append(
-            recording["metrics"]
-        )
+def _compute_aggregate(batch_metrics):
+    """
+    Given a list of metrics dicts (one per recording, all for the same
+    preprocessing stage), computes mean/median/mode/std per metric.
+    """
 
     aggregate = {}
+
+    if not batch_metrics:
+        return aggregate
 
     metric_keys = batch_metrics[0].keys()
 
@@ -52,7 +41,7 @@ def save_batch(
 
         for metrics in batch_metrics:
 
-            value = metrics[key]
+            value = metrics.get(key)
 
             if isinstance(value, (int, float)):
                 values.append(value)
@@ -96,6 +85,79 @@ def save_batch(
                 )
             }
 
+    return aggregate
+
+
+def save_batch(
+    batch_name,
+    task,
+    recordings,
+    speaker_id,
+    device,
+    environment,
+    distance,
+    notes
+):
+    """
+    recordings: list of
+        {
+            "filepath": str,
+            "stages": {
+                stage_key: {
+                    "label": str,
+                    "layers_applied": [...],
+                    "metrics": {...}
+                },
+                ...
+            },
+            "feature_vector": [...]   (drawn from the full 2-layer stage,
+                                        used by PCA exactly as before)
+        }
+
+    Computes an aggregate (mean/median/mode/std per metric) independently
+    for each preprocessing stage ("No Layer" / "1 Layer" / "2 Layers"),
+    stored under "aggregate_by_stage", so R&D History can show how each
+    layer shifts biomarker values relative to raw audio.
+
+    "aggregate" (top-level, flat) is kept for backward compatibility with
+    Set Baseline / Compute Drift / Rank Survivability / PCA, which are
+    stage-agnostic and continue to operate on the fully preprocessed
+    ("2 Layers") stage, exactly as they did before staged extraction was
+    added.
+    """
+
+    data = load_research_data()
+
+    stage_keys = []
+
+    if recordings:
+        stage_keys = list(recordings[0]["stages"].keys())
+
+    aggregate_by_stage = {}
+
+    for stage_key in stage_keys:
+
+        batch_metrics = [
+            recording["stages"][stage_key]["metrics"]
+            for recording in recordings
+            if stage_key in recording["stages"]
+        ]
+
+        aggregate_by_stage[stage_key] = _compute_aggregate(batch_metrics)
+
+    stage_labels = {}
+
+    if recordings:
+        stage_labels = {
+            stage_key: recordings[0]["stages"][stage_key]["label"]
+            for stage_key in stage_keys
+        }
+
+    # Backward-compatible flat aggregate: the full-preprocessing stage
+    # (last stage key) if staged data exists, else empty.
+    full_stage_key = stage_keys[-1] if stage_keys else None
+    flat_aggregate = aggregate_by_stage.get(full_stage_key, {}) if full_stage_key else {}
+
     data[batch_name] = {
 
         "task": task,
@@ -112,7 +174,15 @@ def save_batch(
 
         "recordings": recordings,
 
-        "aggregate": aggregate
+        "stage_labels": stage_labels,
+
+        # Per-stage aggregates, keyed by stage key -- powers the R&D
+        # History radio-button stage comparison.
+        "aggregate_by_stage": aggregate_by_stage,
+
+        # Flat aggregate for Set Baseline / Compute Drift / Rank
+        # Survivability / PCA (stage-agnostic, uses full pipeline).
+        "aggregate": flat_aggregate
     }
 
     with open(RND_FILE, "w") as f:
@@ -332,9 +402,46 @@ def perform_pca_analysis(
 
         return None, None, None
 
+    # Different batches can carry feature vectors of different lengths --
+    # either because they mix tasks (Sustained Vowel vs DDK produce a
+    # different number of features), or because they were saved under an
+    # older/newer version of feature_extractor.py. PCA needs one
+    # consistent length across all rows, so keep only the vectors
+    # matching the most common length and drop the rest instead of
+    # crashing with a ragged-array error.
+
+    lengths = [
+        len(vector)
+        for vector in feature_vectors
+    ]
+
+    most_common_length = Counter(
+        lengths
+    ).most_common(1)[0][0]
+
+    filtered = [
+        (vector, label)
+        for vector, label in zip(feature_vectors, labels)
+        if len(vector) == most_common_length
+    ]
+
+    if len(filtered) < 2:
+
+        return None, None, None
+
+    feature_vectors, labels = zip(*filtered)
+
+    feature_vectors = list(feature_vectors)
+
+    labels = list(labels)
+
     X = np.array(
         feature_vectors
     )
+
+    if X.shape[0] < 2 or X.shape[1] < 2:
+
+        return None, None, None
 
     pca = PCA(
         n_components=2

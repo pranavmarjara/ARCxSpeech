@@ -2,6 +2,9 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 
+import threading
+import time
+
 from app.recorder import record_audio
 
 from app.config import (
@@ -18,7 +21,102 @@ from app.assessment_store import (
     save_assessment
 )
 
+from app.window_nav import open_child_window
+
 import numpy as np
+
+
+class AssessmentResultsWindow:
+
+    def __init__(
+        self,
+        root,
+        patient_id,
+        age,
+        sex,
+        assessment_time,
+        vowel_mean,
+        vowel_sd,
+        ddk_mean,
+        ddk_sd
+    ):
+
+        self.root = root
+
+        self.root.title(
+            "Assessment Results"
+        )
+
+        self.root.geometry(
+            "900x700"
+        )
+
+        tk.Label(
+            root,
+            text="ASSESSMENT INFORMATION",
+            font=("Arial", 14, "bold")
+        ).pack(pady=(45, 10))
+
+        metadata_text = (
+            f"Patient ID: {patient_id}\n"
+            f"Age: {age}\n"
+            f"Sex: {sex}\n"
+            f"Assessment Date: {assessment_time}"
+        )
+
+        tk.Label(
+            root,
+            text=metadata_text,
+            font=("Arial", 11),
+            justify="left"
+        ).pack(pady=10)
+
+        tk.Label(
+            root,
+            text="SUSTAINED VOWEL",
+            font=("Arial", 14, "bold")
+        ).pack(pady=10)
+
+        vowel_text = tk.Text(
+            root,
+            height=18,
+            width=70
+        )
+
+        vowel_text.pack()
+
+        for key, value in vowel_mean.items():
+
+            sd = vowel_sd.get(key, 0)
+
+            vowel_text.insert(
+                tk.END,
+                f"{key}: {value} ± {sd}\n"
+            )
+
+        tk.Label(
+            root,
+            text="DDK",
+            font=("Arial", 14, "bold")
+        ).pack(pady=10)
+
+        ddk_text = tk.Text(
+            root,
+            height=18,
+            width=70
+        )
+
+        ddk_text.pack()
+
+        for key, value in ddk_mean.items():
+
+            sd = ddk_sd.get(key, 0)
+
+            ddk_text.insert(
+                tk.END,
+                f"{key}: {value} ± {sd}\n"
+            )
+
 
 class AssessmentWindow:
 
@@ -172,6 +270,27 @@ class AssessmentWindow:
 
             return
 
+        try:
+            age = int(age)
+
+        except ValueError:
+
+            messagebox.showerror(
+                "Invalid Age",
+                "Age must be a whole number (e.g. 34)."
+            )
+
+            return
+
+        if age <= 0 or age > 130:
+
+            messagebox.showerror(
+                "Invalid Age",
+                "Age must be a realistic value between 1 and 130."
+            )
+
+            return
+
         self.patient_name = patient_name
         self.patient_id = patient_id
         self.age = age
@@ -206,13 +325,15 @@ class AssessmentWindow:
 
         self.vowel_status.pack()
 
-        tk.Button(
+        self.record_vowel_btn = tk.Button(
             self.root,
             text="Record Vowel Trial",
             command=self.record_vowel,
             width=25,
             height=2
-        ).pack(pady=10)
+        )
+
+        self.record_vowel_btn.pack(pady=10)
 
         tk.Label(
             self.root,
@@ -229,13 +350,33 @@ class AssessmentWindow:
 
         self.ddk_status.pack()
 
-        tk.Button(
+        self.record_ddk_btn = tk.Button(
             self.root,
             text="Record DDK Trial",
             command=self.record_ddk,
             width=25,
             height=2
-        ).pack(pady=10)
+        )
+
+        self.record_ddk_btn.pack(pady=10)
+
+        self.status_label = tk.Label(
+            self.root,
+            text="",
+            font=("Arial", 11, "bold")
+        )
+
+        self.status_label.pack(pady=(15, 5))
+
+        self.progress_bar = ttk.Progressbar(
+            self.root,
+            orient="horizontal",
+            length=300,
+            mode="determinate",
+            maximum=100
+        )
+
+        self.progress_bar.pack(pady=(0, 10))
 
         self.process_btn = tk.Button(
             self.root,
@@ -248,49 +389,160 @@ class AssessmentWindow:
 
         self.process_btn.pack(pady=40)
 
+    def _start_recording_flow(self, duration, prefix, on_success):
+
+        self.record_vowel_btn.config(state="disabled")
+        self.record_ddk_btn.config(state="disabled")
+        self.process_btn.config(state="disabled")
+
+        self.progress_bar["value"] = 0
+
+        self._countdown(3, duration, prefix, on_success)
+
+    def _countdown(self, seconds_left, duration, prefix, on_success):
+
+        if seconds_left > 0:
+
+            self.status_label.config(
+                text=f"Recording starts in: {seconds_left}"
+            )
+
+            self.root.after(
+                1000,
+                lambda: self._countdown(
+                    seconds_left - 1,
+                    duration,
+                    prefix,
+                    on_success
+                )
+            )
+
+            return
+
+        self.status_label.config(
+            text=f"Recording... ({duration} sec)"
+        )
+
+        result = {}
+
+        def worker():
+
+            filepath, audio = record_audio(
+                duration,
+                prefix=prefix
+            )
+
+            result["filepath"] = filepath
+            result["audio"] = audio
+
+        thread = threading.Thread(
+            target=worker,
+            daemon=True
+        )
+
+        thread.start()
+
+        start_time = time.time()
+
+        self._poll_recording(
+            thread,
+            start_time,
+            duration,
+            result,
+            on_success
+        )
+
+    def _poll_recording(
+        self,
+        thread,
+        start_time,
+        duration,
+        result,
+        on_success
+    ):
+
+        elapsed = time.time() - start_time
+
+        progress = min(100, (elapsed / duration) * 100)
+
+        self.progress_bar["value"] = progress
+
+        if thread.is_alive():
+
+            self.root.after(
+                100,
+                lambda: self._poll_recording(
+                    thread,
+                    start_time,
+                    duration,
+                    result,
+                    on_success
+                )
+            )
+
+            return
+
+        self.progress_bar["value"] = 100
+
+        self.status_label.config(
+            text="Recording complete."
+        )
+
+        self.record_vowel_btn.config(state="normal")
+        self.record_ddk_btn.config(state="normal")
+
+        on_success(
+            result["filepath"],
+            result["audio"]
+        )
+
+        self.check_ready()
+
     def record_vowel(self):
 
         if self.vowel_count >= 3:
             return
 
-        filepath, _ = record_audio(
+        def on_success(filepath, audio):
+
+            self.vowel_files.append(
+                filepath
+            )
+
+            self.vowel_count += 1
+
+            self.vowel_status.config(
+                text=f"Completed: {self.vowel_count} / 3"
+            )
+
+        self._start_recording_flow(
             VOWEL_DURATION,
-            prefix="vowel"
+            "vowel",
+            on_success
         )
-
-        self.vowel_files.append(
-            filepath
-        )
-
-        self.vowel_count += 1
-
-        self.vowel_status.config(
-            text=f"Completed: {self.vowel_count} / 3"
-        )
-
-        self.check_ready()
 
     def record_ddk(self):
 
         if self.ddk_count >= 3:
             return
 
-        filepath, _ = record_audio(
+        def on_success(filepath, audio):
+
+            self.ddk_files.append(
+                filepath
+            )
+
+            self.ddk_count += 1
+
+            self.ddk_status.config(
+                text=f"Completed: {self.ddk_count} / 3"
+            )
+
+        self._start_recording_flow(
             DDK_DURATION,
-            prefix="ddk"
+            "ddk",
+            on_success
         )
-
-        self.ddk_files.append(
-            filepath
-        )
-
-        self.ddk_count += 1
-
-        self.ddk_status.config(
-            text=f"Completed: {self.ddk_count} / 3"
-        )
-
-        self.check_ready()
 
     def check_ready(self):
 
@@ -363,7 +615,11 @@ class AssessmentWindow:
 
             self.vowel_files,
 
-            self.ddk_files
+            self.ddk_files,
+
+            vowel_sd,
+
+            ddk_sd
         )
 
         from datetime import datetime
@@ -373,149 +629,40 @@ class AssessmentWindow:
         )
 
         self.show_results(
-
             self.patient_id,
-
             self.age,
-
             self.sex,
-
             assessment_time,
-
             vowel_mean,
             vowel_sd,
-
             ddk_mean,
             ddk_sd
         )
 
     def show_results(
-
         self,
-
         patient_id,
-
         age,
-
         sex,
-
         assessment_time,
-
         vowel_mean,
         vowel_sd,
-
         ddk_mean,
         ddk_sd
     ):
 
-        result_window = tk.Toplevel(
-            self.root
+        open_child_window(
+            self.root,
+            AssessmentResultsWindow,
+            patient_id,
+            age,
+            sex,
+            assessment_time,
+            vowel_mean,
+            vowel_sd,
+            ddk_mean,
+            ddk_sd
         )
-
-        result_window.title(
-            "Assessment Results"
-        )
-
-        result_window.geometry(
-            "900x700"
-        )
-
-        tk.Label(
-
-            result_window,
-
-            text="ASSESSMENT INFORMATION",
-
-            font=("Arial",14,"bold")
-
-        ).pack(
-            pady=10
-        )
-
-        metadata_text = (
-            f"Patient ID: {patient_id}\n"
-            f"Age: {age}\n"
-            f"Sex: {sex}\n"
-            f"Assessment Date: {assessment_time}"
-        )
-
-        tk.Label(
-
-            result_window,
-
-            text=metadata_text,
-
-            font=("Arial",11),
-
-            justify="left"
-
-        ).pack(
-            pady=10
-        )
-
-        tk.Label(
-
-            result_window,
-
-            text="SUSTAINED VOWEL",
-
-            font=("Arial",14,"bold")
-
-        ).pack(
-            pady=10
-        )
-
-        vowel_text = tk.Text(
-            result_window,
-            height=18,
-            width=70
-        )
-
-        vowel_text.pack()
-
-        for key, value in vowel_mean.items():
-
-            sd = vowel_sd.get(
-                key,
-                0
-            )
-
-            vowel_text.insert(
-                tk.END,
-                f"{key}: {value} ± {sd}\n"
-            )
-
-        tk.Label(
-
-            result_window,
-
-            text="DDK",
-
-            font=("Arial",14,"bold")
-
-        ).pack(
-            pady=10
-        )
-
-        ddk_text = tk.Text(
-            result_window,
-            height=18,
-            width=70
-        )
-
-        ddk_text.pack()
-
-        for key, value in ddk_mean.items():
-
-            sd = ddk_sd.get(
-                key,
-                0
-            )
-
-            ddk_text.insert(
-                tk.END,
-                f"{key}: {value} ± {sd}\n"
-            ) 
 
     def average_metrics(
         self,

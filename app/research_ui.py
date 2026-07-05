@@ -4,9 +4,9 @@ from tkinter import ttk
 from tkinter import filedialog
 from tkinter import messagebox
 
-from app.feature_extractor import (
-    extract_vowel_features,
-    extract_ddk_features
+from app.staged_extraction import (
+    run_staged_extraction,
+    STAGE_KEYS
 )
 
 from app.research_store import (
@@ -17,6 +17,8 @@ from app.research_store import (
 from app.research_history_ui import (
     ResearchHistoryWindow
 )
+
+from app.window_nav import open_child_window
 
 class ResearchWindow:
 
@@ -319,13 +321,7 @@ class ResearchWindow:
 
     def open_history(self):
 
-        history_window = tk.Toplevel(
-            self.root
-        )
-
-        ResearchHistoryWindow(
-            history_window
-        )
+        open_child_window(self.root, ResearchHistoryWindow)
 
     # ---------------------------------
     # PROCESS BATCH
@@ -355,6 +351,36 @@ class ResearchWindow:
 
             return
 
+        if distance:
+
+            try:
+                distance = float(distance)
+
+            except ValueError:
+
+                messagebox.showerror(
+                    "Invalid Distance",
+                    "Mic Distance (cm) must be a number, e.g. 15 or 15.5."
+                )
+
+                return
+
+        existing_data = load_research_data()
+
+        if batch_name in existing_data:
+
+            overwrite = messagebox.askyesno(
+                "Batch Name Already Exists",
+                f"A batch named '{batch_name}' already exists and has "
+                f"{len(existing_data[batch_name].get('recordings', []))} "
+                "recording(s) saved.\n\n"
+                "Continuing will permanently overwrite that batch's data. "
+                "Do you want to overwrite it?"
+            )
+
+            if not overwrite:
+                return
+
         file_count = len(self.filepaths)
 
         if file_count < 1:
@@ -379,23 +405,23 @@ class ResearchWindow:
 
         recordings = []
 
+        # Full-pipeline stage (both layers applied) -- this is what the
+        # "Process Batch" screen shows immediately below. All 3 stages
+        # are still computed and saved so R&D History can compare them.
+        full_stage_key = STAGE_KEYS[-1]
+
         for filepath in self.filepaths:
 
-            if task == "Sustained Vowel":
+            stage_results = run_staged_extraction(
+                filepath,
+                task
+            )
 
-                metrics = extract_vowel_features(
-                    filepath
-                )
-
-            else:
-
-                metrics = extract_ddk_features(
-                    filepath
-                )
+            full_metrics = stage_results[full_stage_key]["metrics"]
 
             feature_vector = []
 
-            for value in metrics.values():
+            for value in full_metrics.values():
 
                 if isinstance(
                     value,
@@ -410,12 +436,12 @@ class ResearchWindow:
 
                 "filepath": filepath,
 
-                "metrics": metrics,
+                "stages": stage_results,
 
                 "feature_vector": feature_vector
             })
 
-            all_metrics.append(metrics)
+            all_metrics.append(full_metrics)
 
 
         # ---------------------------------
