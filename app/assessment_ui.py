@@ -459,13 +459,23 @@ class AssessmentWindow:
 
         def worker():
 
-            filepath, audio = record_audio(
-                duration,
-                prefix=prefix
-            )
+            try:
 
-            result["filepath"] = filepath
-            result["audio"] = audio
+                filepath, audio = record_audio(
+                    duration,
+                    prefix=prefix
+                )
+
+                result["filepath"] = filepath
+                result["audio"] = audio
+
+            except Exception as e:
+
+                # Caught here rather than left to crash the background
+                # thread silently -- store it so _poll_recording (running
+                # on the main/UI thread) can show it to the user instead
+                # of proceeding as if recording succeeded.
+                result["error"] = e
 
         thread = threading.Thread(
             target=worker,
@@ -514,14 +524,32 @@ class AssessmentWindow:
 
             return
 
+        self.record_vowel_btn.config(state="normal")
+        self.record_ddk_btn.config(state="normal")
+
+        error = result.get("error")
+
+        if error is not None:
+
+            self.progress_bar["value"] = 0
+
+            self.status_label.config(
+                text="Recording failed."
+            )
+
+            messagebox.showerror(
+                "Recording Failed",
+                f"The recording could not be completed:\n\n{error}\n\n"
+                "Please check the device connection and try again."
+            )
+
+            return
+
         self.progress_bar["value"] = 100
 
         self.status_label.config(
             text="Recording complete."
         )
-
-        self.record_vowel_btn.config(state="normal")
-        self.record_ddk_btn.config(state="normal")
 
         on_success(
             result["filepath"],

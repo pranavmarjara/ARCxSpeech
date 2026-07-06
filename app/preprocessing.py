@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 from scipy import signal
 
@@ -56,4 +58,38 @@ def apply_frequency_filtering(audio: np.ndarray, sr: int = SAMPLE_RATE) -> np.nd
     b, a = signal.iirnotch(w0, NOTCH_Q)
     out = signal.filtfilt(b, a, out, axis=0)
 
-    return out.astype(audio.dtype)
+    # Cascaded filtfilt passes can produce transient overshoot/ringing
+    # near band edges, so a near-full-scale input can exceed the
+    # original dtype's range after filtering. Casting an out-of-range
+    # float straight to an integer dtype does NOT clip -- it wraps
+    # around silently (e.g. a value just above int16 max becomes a
+    # large-magnitude value near int16 min), which looks like plausible
+    # audio but is actually corrupted data. Clip explicitly first so the
+    # cast always saturates instead of wrapping.
+    if np.issubdtype(audio.dtype, np.integer):
+
+        info = np.iinfo(audio.dtype)
+        clipped = np.clip(out, info.min, info.max)
+
+    else:
+
+        # This codebase's convention is normalized float audio in
+        # [-1.0, 1.0] (see recorder.py). Clip to that range so a
+        # downstream PCM_16 write (soundfile) saturates predictably
+        # instead of clipping unpredictably at write time.
+        clipped = np.clip(out, -1.0, 1.0)
+
+    num_clipped = int(np.sum(clipped != out))
+
+    if num_clipped > 0:
+
+        warnings.warn(
+            f"apply_frequency_filtering: {num_clipped} sample(s) "
+            "exceeded the valid range after filtering and were clipped "
+            "to avoid integer wraparound / out-of-range floats. This "
+            "usually means the input was recorded too close to full "
+            "scale -- consider reducing input gain.",
+            RuntimeWarning
+        )
+
+    return clipped.astype(audio.dtype)

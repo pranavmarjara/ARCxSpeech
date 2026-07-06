@@ -1,8 +1,50 @@
 import json
 import os
+import tempfile
 from datetime import datetime
 
-ASSESSMENT_FILE = "clinical_assessments.json"
+ASSESSMENT_FILE = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "..",
+    "clinical_assessments.json"
+)
+ASSESSMENT_FILE = os.path.normpath(ASSESSMENT_FILE)
+
+
+def _atomic_write_json(filepath, data):
+    """
+    Writes JSON to `filepath` atomically: data is written to a temp file
+    in the same directory, flushed to disk, then moved into place with
+    os.replace (atomic on both POSIX and Windows). This means a crash or
+    power loss mid-write can never leave `filepath` truncated or corrupt --
+    either the old file is intact, or the new one is.
+    """
+
+    directory = os.path.dirname(filepath) or "."
+
+    fd, tmp_path = tempfile.mkstemp(
+        dir=directory,
+        prefix=".tmp_",
+        suffix=".json"
+    )
+
+    try:
+
+        with os.fdopen(fd, "w") as f:
+            json.dump(data, f, indent=4)
+            f.flush()
+            os.fsync(f.fileno())
+
+        os.replace(tmp_path, filepath)
+
+    except Exception:
+
+        try:
+            os.remove(tmp_path)
+        except OSError:
+            pass
+
+        raise
 
 
 def load_assessments():
@@ -11,19 +53,25 @@ def load_assessments():
         ASSESSMENT_FILE
     ):
 
+        _atomic_write_json(ASSESSMENT_FILE, [])
+
+    try:
+
         with open(
             ASSESSMENT_FILE,
-            "w"
+            "r"
         ) as f:
 
-            json.dump([], f)
+            return json.load(f)
 
-    with open(
-        ASSESSMENT_FILE,
-        "r"
-    ) as f:
+    except json.JSONDecodeError as e:
 
-        return json.load(f)
+        raise RuntimeError(
+            f"Clinical assessment data file at {ASSESSMENT_FILE} is "
+            f"corrupted and could not be read ({e}). No data was "
+            "modified. Restore from a backup before continuing, since "
+            "this file holds all saved patient assessments."
+        ) from e
 
 
 def save_assessment(
@@ -98,13 +146,4 @@ def save_assessment(
         assessment
     )
 
-    with open(
-        ASSESSMENT_FILE,
-        "w"
-    ) as f:
-
-        json.dump(
-            data,
-            f,
-            indent=4
-        )
+    _atomic_write_json(ASSESSMENT_FILE, data)

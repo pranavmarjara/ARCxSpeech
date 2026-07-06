@@ -1,5 +1,6 @@
 import json
 import os
+import tempfile
 import numpy as np
 from statistics import mode
 from statistics import StatisticsError
@@ -7,19 +8,71 @@ from collections import Counter
 import math
 from sklearn.decomposition import PCA
 
-RND_FILE = "research_sessions.json"
-BASELINE_FILE = "baseline.json"
+_APP_ROOT = os.path.normpath(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+)
+
+RND_FILE = os.path.join(_APP_ROOT, "research_sessions.json")
+BASELINE_FILE = os.path.join(_APP_ROOT, "baseline.json")
+
+
+def _atomic_write_json(filepath, data):
+    """
+    Writes JSON to `filepath` atomically: data is written to a temp file
+    in the same directory, flushed to disk, then moved into place with
+    os.replace (atomic on both POSIX and Windows). This means a crash or
+    power loss mid-write can never leave `filepath` truncated or corrupt --
+    either the old file is intact, or the new one is.
+    """
+
+    directory = os.path.dirname(filepath) or "."
+
+    fd, tmp_path = tempfile.mkstemp(
+        dir=directory,
+        prefix=".tmp_",
+        suffix=".json"
+    )
+
+    try:
+
+        with os.fdopen(fd, "w") as f:
+            json.dump(data, f, indent=4)
+            f.flush()
+            os.fsync(f.fileno())
+
+        os.replace(tmp_path, filepath)
+
+    except Exception:
+
+        try:
+            os.remove(tmp_path)
+        except OSError:
+            pass
+
+        raise
+
+
+def _load_json_or_raise(filepath, empty_default):
+
+    if not os.path.exists(filepath):
+        _atomic_write_json(filepath, empty_default)
+
+    try:
+
+        with open(filepath, "r") as f:
+            return json.load(f)
+
+    except json.JSONDecodeError as e:
+
+        raise RuntimeError(
+            f"Data file at {filepath} is corrupted and could not be "
+            f"read ({e}). No data was modified. Restore from a backup "
+            "before continuing."
+        ) from e
 
 
 def load_research_data():
-
-    if not os.path.exists(RND_FILE):
-
-        with open(RND_FILE, "w") as f:
-            json.dump({}, f)
-
-    with open(RND_FILE, "r") as f:
-        return json.load(f)
+    return _load_json_or_raise(RND_FILE, {})
 
 
 def _compute_aggregate(batch_metrics):
@@ -185,8 +238,7 @@ def save_batch(
         "aggregate": flat_aggregate
     }
 
-    with open(RND_FILE, "w") as f:
-        json.dump(data, f, indent=4)
+    _atomic_write_json(RND_FILE, data)
 
 
 # =====================================
@@ -205,16 +257,7 @@ def save_baseline(
         "aggregate": aggregate
     }
 
-    with open(
-        BASELINE_FILE,
-        "w"
-    ) as f:
-
-        json.dump(
-            baseline,
-            f,
-            indent=4
-        )        
+    _atomic_write_json(BASELINE_FILE, baseline)
 
 # =====================================
 # LOAD BASELINE
@@ -228,13 +271,23 @@ def load_baseline():
 
         return None
 
-    with open(
-        BASELINE_FILE,
-        "r"
-    ) as f:
+    try:
 
-        return json.load(f)        
-    
+        with open(
+            BASELINE_FILE,
+            "r"
+        ) as f:
+
+            return json.load(f)
+
+    except json.JSONDecodeError as e:
+
+        raise RuntimeError(
+            f"Baseline data file at {BASELINE_FILE} is corrupted and "
+            f"could not be read ({e}). Re-run 'Set Baseline' or restore "
+            "from a backup."
+        ) from e
+
 # =====================================
 # COMPUTE DRIFT
 # =====================================
@@ -303,9 +356,17 @@ def rank_feature_survivability(
 
         for batch_name, batch_data in research_data.items():
 
-            aggregate = batch_data[
-                "aggregate"
-            ]
+            # .get(..., {}) rather than direct indexing: batches saved
+            # by an older version of save_batch (before the flat
+            # "aggregate" key existed, or under a different schema)
+            # won't have this key. Treat them as having no data for
+            # this feature instead of crashing the whole ranking over
+            # one legacy batch -- consistent with how save_batch
+            # itself already treats missing stage data elsewhere.
+            aggregate = batch_data.get(
+                "aggregate",
+                {}
+            )
 
             if feature not in aggregate:
                 continue
