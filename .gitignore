@@ -2,3 +2,6 @@
 .idea/
 __pycache__/
 *.pyc
+# Local development files
+recordings/
+test_recorder.py
