@@ -102,7 +102,13 @@ def save_assessment(
 
     ddk_sd=None,
 
-    ambient_sd=None
+    ambient_sd=None,
+
+    recording_quality_mean=None,
+
+    recording_quality_sd=None,
+
+    recording_quality_classification=None
 ):
 
     data = load_assessments()
@@ -139,7 +145,19 @@ def save_assessment(
 
         "ddk_sd": ddk_sd or {},
 
-        "ambient_sd": ambient_sd or {}
+        "ambient_sd": ambient_sd or {},
+
+        # Independent recording-quality engine output (SNR-based).
+        # Stored separately from ambient_mean/ambient_sd, which remain
+        # the raw ambient acoustic metrics from app/ambient_analyzer.py.
+        # Older assessments saved before this field existed simply
+        # won't have these keys -- readers should use .get() with a
+        # default, as clinical_history_ui.py does.
+        "recording_quality_mean": recording_quality_mean or {},
+
+        "recording_quality_sd": recording_quality_sd or {},
+
+        "recording_quality_classification": recording_quality_classification or {}
     }
 
     data.append(

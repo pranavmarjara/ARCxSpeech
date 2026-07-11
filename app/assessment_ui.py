@@ -21,6 +21,12 @@ from app.ambient_analyzer import (
     extract_ambient_metrics
 )
 
+from app.recording_quality import (
+    analyze_recording_quality,
+    aggregate_recording_quality_metrics,
+    classify_recording_quality
+)
+
 from app.assessment_store import (
     save_assessment
 )
@@ -44,7 +50,10 @@ class AssessmentResultsWindow:
         ddk_mean,
         ddk_sd,
         ambient_mean,
-        ambient_sd
+        ambient_sd,
+        recording_quality_mean,
+        recording_quality_sd,
+        recording_quality_classification
     ):
 
         self.root = root
@@ -114,13 +123,51 @@ class AssessmentResultsWindow:
             width=70
         )
 
-        ambient_text.pack()
-
         for key, value in ambient_mean.items():
 
             sd = ambient_sd.get(key, 0)
 
             ambient_text.insert(
+                tk.END,
+                f"{key}: {value} ± {sd}\n"
+            )
+
+
+        tk.Label(
+            root,
+            text="RECORDING QUALITY",
+            font=("Arial", 14, "bold")
+        ).pack(pady=10)
+
+        rq_summary = (
+            f"Rating: {recording_quality_classification.get('Recording Quality Rating', 'N/A')}   "
+            f"Score: {recording_quality_classification.get('Recording Quality Score', 'N/A')}   "
+            f"Confidence: {recording_quality_classification.get('Confidence', 'N/A')}\n"
+            f"Environment: {recording_quality_classification.get('Environment', 'N/A')}\n"
+            f"Recommendation: {recording_quality_classification.get('Recommendation', 'N/A')}"
+        )
+
+        tk.Label(
+            root,
+            text=rq_summary,
+            font=("Arial", 11),
+            justify="left",
+            wraplength=900
+        ).pack(pady=10)
+
+        recording_quality_text = tk.Text(
+            root,
+            height=10,
+            width=70
+        )
+
+        recording_quality_text.pack()
+
+        for key, value in recording_quality_mean.items():
+
+            sd = recording_quality_sd.get(key, 0)
+
+            recording_quality_text.insert(
                 tk.END,
                 f"{key}: {value} ± {sd}\n"
             )
@@ -658,6 +705,31 @@ class AssessmentWindow:
         ambient_sd = self.metric_sd(
             ambient_results
         )
+
+        # Recording Quality Engine -- independent from both the
+        # clinical (vowel/ddk) and ambient-acoustic pipelines above.
+        # analyze_recording_quality() computes metrics only; the
+        # classifier is run once, on the trial-averaged metrics, to
+        # produce a single session-level rating/environment/
+        # recommendation/confidence.
+        recording_quality_results = []
+
+        for file in all_files:
+
+            recording_quality_results.append(
+                analyze_recording_quality(
+                    file
+                )
+            )
+
+        recording_quality_mean, recording_quality_sd = aggregate_recording_quality_metrics(
+            recording_quality_results
+        )
+
+        recording_quality_classification = classify_recording_quality(
+            recording_quality_mean
+        )
+
         vowel_mean = self.average_metrics(
             vowel_results
         )
@@ -702,7 +774,13 @@ class AssessmentWindow:
 
             ddk_sd,
 
-            ambient_sd
+            ambient_sd,
+
+            recording_quality_mean,
+
+            recording_quality_sd,
+
+            recording_quality_classification
         )
 
         from datetime import datetime
@@ -721,7 +799,10 @@ class AssessmentWindow:
             ddk_mean,
             ddk_sd,
             ambient_mean,
-            ambient_sd
+            ambient_sd,
+            recording_quality_mean,
+            recording_quality_sd,
+            recording_quality_classification
         )
 
     def show_results(
@@ -735,7 +816,10 @@ class AssessmentWindow:
         ddk_mean,
         ddk_sd,
         ambient_mean,
-        ambient_sd
+        ambient_sd,
+        recording_quality_mean,
+        recording_quality_sd,
+        recording_quality_classification
     ):
 
         open_child_window(
@@ -750,7 +834,10 @@ class AssessmentWindow:
             ddk_mean,
             ddk_sd,
             ambient_mean,
-            ambient_sd
+            ambient_sd,
+            recording_quality_mean,
+            recording_quality_sd,
+            recording_quality_classification
         )
 
     def average_metrics(

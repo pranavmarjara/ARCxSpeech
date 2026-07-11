@@ -174,6 +174,78 @@ class AssessmentDetailWindow:
                 f"{key:<30}{value} ± {sd}\n"
             )
 
+        recording_quality_classification = assessment.get(
+            "recording_quality_classification",
+            {}
+        )
+
+        recording_quality_mean = assessment.get(
+            "recording_quality_mean",
+            {}
+        )
+
+        recording_quality_sd = assessment.get(
+            "recording_quality_sd",
+            {}
+        )
+
+        # Older assessments saved before the Recording Quality Engine
+        # was integrated won't have this data -- skip the section
+        # entirely rather than showing an empty/misleading block.
+        if recording_quality_classification or recording_quality_mean:
+
+            text.insert(
+                tk.END,
+                "\n==============================\n"
+            )
+
+            text.insert(
+                tk.END,
+                "RECORDING QUALITY\n"
+            )
+
+            text.insert(
+                tk.END,
+                "==============================\n\n"
+            )
+
+            text.insert(
+                tk.END,
+                f"Rating       : {recording_quality_classification.get('Recording Quality Rating', 'N/A')}\n"
+            )
+
+            text.insert(
+                tk.END,
+                f"Score        : {recording_quality_classification.get('Recording Quality Score', 'N/A')}\n"
+            )
+
+            text.insert(
+                tk.END,
+                f"Environment  : {recording_quality_classification.get('Environment', 'N/A')}\n"
+            )
+
+            text.insert(
+                tk.END,
+                f"Confidence   : {recording_quality_classification.get('Confidence', 'N/A')}\n"
+            )
+
+            text.insert(
+                tk.END,
+                f"Recommendation: {recording_quality_classification.get('Recommendation', 'N/A')}\n\n"
+            )
+
+            for key, value in recording_quality_mean.items():
+
+                sd = recording_quality_sd.get(
+                    key,
+                    0
+                )
+
+                text.insert(
+                    tk.END,
+                    f"{key:<30}{value} ± {sd}\n"
+                )
+
         text.config(
             state="disabled"
         )
@@ -280,6 +352,19 @@ class ClinicalHistoryWindow:
             self.assessments
         ):
 
+            rq_rating = assessment.get(
+                "recording_quality_classification",
+                {}
+            ).get(
+                "Recording Quality Rating"
+            )
+
+            rq_suffix = (
+                f" | Quality: {rq_rating}"
+                if rq_rating
+                else ""
+            )
+
             entry = (
 
                 f"[{idx}] "
@@ -291,6 +376,8 @@ class ClinicalHistoryWindow:
                 f"Sex: {assessment['sex']} | "
 
                 f"{assessment['timestamp']}"
+
+                f"{rq_suffix}"
 
             )
 
