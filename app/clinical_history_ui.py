@@ -1,16 +1,32 @@
+# REPLACEMENT:
 import tkinter as tk
-import json
-import os
 
-import matplotlib.pyplot as plt
-from collections import defaultdict
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (
+    FigureCanvasTkAgg,
+    NavigationToolbar2Tk
+)
 
 from tkinter import messagebox
 
 from app.window_nav import open_child_window
 from app.config import DDK_DURATION
 
-ASSESSMENT_FILE = "clinical_assessments.json"
+# Single source of truth for where assessments live -- this used to be
+# redefined here as a bare relative filename, which resolved against
+# whatever the process's working directory happened to be at launch
+# instead of the app's actual install location. If ARCxSpeech was ever
+# started from a different working directory (a desktop shortcut, a
+# different IDE run config, a packaged .exe, a scheduled task), this
+# screen would silently show an empty history while assessment_store.py
+# had been correctly saving every assessment to the real file the whole
+# time. Importing both the path and the loader from assessment_store.py
+# means this file can no longer drift from where the writer actually
+# writes.
+from app.assessment_store import (
+    ASSESSMENT_FILE,
+    load_assessments as load_assessments_from_store
+)
 
 
 class AssessmentDetailWindow:
@@ -250,7 +266,30 @@ class AssessmentDetailWindow:
             state="disabled"
         )
 
+class _TrendPlotWindow:
+    """
+    Embeds a matplotlib Figure in its own Toplevel via
+    FigureCanvasTkAgg, managed the same way as every other window in
+    this app (open_child_window), instead of calling plt.show() and
+    handing control to a second, separate GUI event loop.
+    """
 
+    def __init__(self, root, fig, title="Trends"):
+
+        self.root = root
+        self.fig = fig
+
+        self.root.title(title)
+        self.root.geometry("1100x900")
+
+        canvas = FigureCanvasTkAgg(fig, master=root)
+        canvas.draw()
+
+        toolbar = NavigationToolbar2Tk(canvas, root)
+        toolbar.update()
+
+        canvas.get_tk_widget().pack(fill="both", expand=True)
+        
 class ClinicalHistoryWindow:
 
     def __init__(self, root):
@@ -325,22 +364,23 @@ class ClinicalHistoryWindow:
             pady=10
         )
 
+    # REPLACEMENT:
     def load_assessments(self):
 
-        self.assessments = []
+        try:
 
-        if not os.path.exists(
-            ASSESSMENT_FILE
-        ):
-            return
+            self.assessments = load_assessments_from_store()
 
-        with open(
-            ASSESSMENT_FILE,
-            "r"
-        ) as f:
+        except RuntimeError as e:
 
-            self.assessments = json.load(
-                f
+            # load_assessments_from_store() raises this on a corrupted
+            # JSON file rather than crashing -- surface it instead of
+            # letting the app die on an unhandled JSONDecodeError.
+            self.assessments = []
+
+            messagebox.showerror(
+                "Data File Error",
+                str(e)
             )
 
         self.listbox.delete(
@@ -406,6 +446,7 @@ class ClinicalHistoryWindow:
         )
 
 
+    # REPLACEMENT:
     def show_trends(self):
 
         selection = self.listbox.curselection()
@@ -477,11 +518,6 @@ class ClinicalHistoryWindow:
                 vowel.get("F0 Mean", 0)
             )
 
-            # "F0 Range" only exists in assessments saved by an older
-            # feature_extractor.py schema. It's trivially derivable from
-            # F0 Max/Min (present in both old and current schema), so
-            # compute it directly instead of relying on the stored key
-            # (which is always missing/0 for current-schema records).
             f0_range_values.append(
                 vowel.get(
                     "F0 Range",
@@ -489,10 +525,6 @@ class ClinicalHistoryWindow:
                 )
             )
 
-            # "Pitch Variability" likewise only exists in the old schema.
-            # For current-schema assessments, fall back to the stored
-            # per-visit F0 standard deviation across the 3 vowel trials
-            # (record["vowel_sd"]), if present.
             pitch_var_values.append(
                 vowel.get(
                     "Pitch Variability",
@@ -546,12 +578,6 @@ class ClinicalHistoryWindow:
                 )
             )
 
-            # "Mean Pause Duration" (seconds) only exists in the old
-            # schema. The current schema only stores "Pause/Speech
-            # Ratio", from which pause duration can be derived using the
-            # fixed DDK recording length: pause_ratio = pause / speech,
-            # and pause + speech = total duration, so
-            # pause = total_duration * ratio / (1 + ratio).
             if "Mean Pause Duration" in ddk:
 
                 pause_duration = ddk["Mean Pause Duration"]
@@ -579,152 +605,106 @@ class ClinicalHistoryWindow:
                 )
             )
 
-        fig, axes = plt.subplots(
-            5,
-            1,
-            figsize=(14,22)
-        )
+        # Each subplot below plots metrics on genuinely different
+        # scales (e.g. F0 Mean ~100-250 Hz next to F0 Range/Pitch
+        # Variability, which are typically single/low-double digits).
+        # Sharing one y-axis flattens the smaller-scale line into an
+        # invisible flat trace at the bottom -- exactly the metrics
+        # most likely to carry a meaningful clinical trend. Each
+        # subplot now uses a twin axis to keep every line legible.
+
+        fig = Figure(figsize=(14, 22))
+
+        axes = fig.subplots(5, 1)
 
         fig.suptitle(
             f"Patient {patient_id} Longitudinal Trends",
             fontsize=16
         )
 
-        axes[0].plot(
-            visits,
-            f0_values,
-            marker="o",
-            label="F0 Mean"
+        def _plot_twin(ax, primary_series, secondary_series, title):
+
+            ax2 = ax.twinx()
+
+            lines = []
+
+            for label, values, color in primary_series:
+
+                line, = ax.plot(
+                    visits, values, marker="o", label=label, color=color
+                )
+
+                lines.append(line)
+
+            for label, values, color in secondary_series:
+
+                line, = ax2.plot(
+                    visits, values, marker="s", linestyle="--",
+                    label=label, color=color
+                )
+
+                lines.append(line)
+
+            ax.set_title(title, pad=15)
+            ax.grid(True)
+
+            labels = [l.get_label() for l in lines]
+            ax.legend(lines, labels, loc="upper left")
+
+            return ax2
+
+        _plot_twin(
+            axes[0],
+            [("F0 Mean", f0_values, "tab:blue")],
+            [
+                ("F0 Range", f0_range_values, "tab:orange"),
+                ("Pitch Variability", pitch_var_values, "tab:green")
+            ],
+            "Voice Stability"
         )
 
-        axes[0].plot(
-            visits,
-            f0_range_values,
-            marker="o",
-            label="F0 Range"
+        _plot_twin(
+            axes[1],
+            [("HNR", hnr_values, "tab:blue")],
+            [("Jitter Local", jitter_values, "tab:orange")],
+            "Voice Quality"
         )
 
-        axes[0].plot(
-            visits,
-            pitch_var_values,
-            marker="o",
-            label="Pitch Variability"
+        _plot_twin(
+            axes[2],
+            [("DDK Rate", ddk_rate_values, "tab:blue")],
+            [("DDK Regularity", ddk_reg_values, "tab:orange")],
+            "Articulation"
         )
 
-        axes[0].set_title(
-            "Voice Stability",
-            pad=15
+        _plot_twin(
+            axes[3],
+            [("Speech Rate", speech_rate_values, "tab:blue")],
+            [
+                ("Pause Duration", pause_values, "tab:orange"),
+                ("Pause Ratio", pause_ratio_values, "tab:green")
+            ],
+            "Fluency"
         )
 
-        axes[0].legend()
-
-        axes[0].grid(True)
-
-        axes[1].plot(
-            visits,
-            hnr_values,
-            marker="o",
-            label="HNR"
+        _plot_twin(
+            axes[4],
+            [("F1 Mean", f1_values, "tab:blue")],
+            [("F2 Mean", f2_values, "tab:orange")],
+            "Resonance"
         )
 
-        axes[1].plot(
-            visits,
-            jitter_values,
-            marker="o",
-            label="Jitter Local"
+        fig.tight_layout(rect=[0, 0, 1, 0.97])
+        fig.subplots_adjust(hspace=0.8)
+
+        # Embedded in its own managed Toplevel instead of plt.show(),
+        # which pops a second, separate GUI event loop on top of the
+        # Tkinter mainloop that's already running from main.py --
+        # fragile across matplotlib versions/backends and never gets
+        # cleaned up on repeated use in one session.
+        open_child_window(
+            self.root,
+            _TrendPlotWindow,
+            fig,
+            f"Trends -- Patient {patient_id}"
         )
-
-        axes[1].set_title(
-            "Voice Quality",
-            pad=15
-        )
-
-        axes[1].legend()
-
-        axes[1].grid(True)
-
-        axes[2].plot(
-            visits,
-            ddk_rate_values,
-            marker="o",
-            label="DDK Rate"
-        )
-
-        axes[2].plot(
-            visits,
-            ddk_reg_values,
-            marker="o",
-            label="DDK Regularity"
-        )
-
-        axes[2].set_title(
-            "Articulation",
-            pad=15
-        )
-
-        axes[2].legend()
-
-        axes[2].grid(True)
-
-        axes[3].plot(
-            visits,
-            speech_rate_values,
-            marker="o",
-            label="Speech Rate"
-        )
-
-        axes[3].plot(
-            visits,
-            pause_values,
-            marker="o",
-            label="Pause Duration"
-        )
-
-        axes[3].plot(
-            visits,
-            pause_ratio_values,
-            marker="o",
-            label="Pause Ratio"
-        )
-
-        axes[3].set_title(
-            "Fluency",
-            pad=15
-        )
-
-        axes[3].legend()
-
-        axes[3].grid(True)
-
-        axes[4].plot(
-            visits,
-            f1_values,
-            marker="o",
-            label="F1 Mean"
-        )
-
-        axes[4].plot(
-            visits,
-            f2_values,
-            marker="o",
-            label="F2 Mean"
-        )
-
-        axes[4].set_title(
-            "Resonance",
-            pad=15
-        )
-
-        axes[4].legend()
-
-        axes[4].grid(True)
-
-        plt.tight_layout(
-            rect=[0, 0, 1, 0.97]
-        )
-
-        fig.subplots_adjust(
-            hspace=0.8
-        )
-
-        plt.show()

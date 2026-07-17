@@ -21,6 +21,30 @@ from app.research_store import (
 
 from app.staged_extraction import STAGE_DEFS, STAGE_KEYS
 
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (
+    FigureCanvasTkAgg,
+    NavigationToolbar2Tk
+)
+
+
+class _PCAPlotWindow:
+
+    def __init__(self, root, fig, title="PCA"):
+
+        self.root = root
+        self.fig = fig
+
+        self.root.title(title)
+        self.root.geometry("900x800")
+
+        canvas = FigureCanvasTkAgg(fig, master=root)
+        canvas.draw()
+
+        toolbar = NavigationToolbar2Tk(canvas, root)
+        toolbar.update()
+
+        canvas.get_tk_widget().pack(fill="both", expand=True)
 
 class ResearchHistoryWindow:
 
@@ -481,7 +505,8 @@ class ResearchHistoryWindow:
             "aggregate"
         ]
 
-        drift_results = compute_drift(
+        # REPLACEMENT:
+        drift_results, skipped = compute_drift(
             baseline_aggregate,
             noise_aggregate
         )
@@ -504,10 +529,25 @@ class ResearchHistoryWindow:
                 values=(feature, drift)
             )
 
-        messagebox.showinfo(
-            "Done",
-            "Drift analysis complete."
-        )
+        # REPLACEMENT:
+        if skipped:
+
+            skip_lines = "\n".join(
+                f"- {feature}: {reason}" for feature, reason in skipped
+            )
+
+            messagebox.showinfo(
+                "Done",
+                f"Drift analysis complete.\n\n"
+                f"{len(skipped)} feature(s) needed a note:\n{skip_lines}"
+            )
+
+        else:
+
+            messagebox.showinfo(
+                "Done",
+                "Drift analysis complete."
+            )
 
     # --------------------------------
     # FEATURE SURVIVABILITY
@@ -530,7 +570,8 @@ class ResearchHistoryWindow:
             "aggregate"
         ]
 
-        ranking = rank_feature_survivability(
+        # REPLACEMENT:
+        ranking, skipped_features = rank_feature_survivability(
             baseline_aggregate,
             self.data
         )
@@ -559,18 +600,32 @@ class ResearchHistoryWindow:
                 )
             )
 
-        messagebox.showinfo(
-            "Done",
-            "Feature survivability ranking complete."
-        )
+        # REPLACEMENT:
+        if skipped_features:
+
+            messagebox.showinfo(
+                "Done",
+                "Feature survivability ranking complete.\n\n"
+                f"{len(skipped_features)} feature(s) excluded (no "
+                "batch had matching data): "
+                f"{', '.join(skipped_features)}"
+            )
+
+        else:
+
+            messagebox.showinfo(
+                "Done",
+                "Feature survivability ranking complete."
+            )
 
     # --------------------------------
     # PCA ANALYSIS
     # --------------------------------
 
+    # REPLACEMENT:
     def run_pca_analysis(self):
 
-        transformed, labels, variance = perform_pca_analysis(
+        transformed, labels, variance, dropped_count = perform_pca_analysis(
             self.data
         )
 
@@ -583,18 +638,32 @@ class ResearchHistoryWindow:
 
             return
 
-        plt.figure(figsize=(10, 8))
+        fig = Figure(figsize=(10, 8))
+        ax = fig.add_subplot(111)
 
         for idx, point in enumerate(transformed):
 
             x, y = point[0], point[1]
 
-            plt.scatter(x, y)
+            ax.scatter(x, y)
 
-            plt.text(x, y, labels[idx], fontsize=8)
+            ax.text(x, y, labels[idx], fontsize=8)
 
-        plt.xlabel(f"PC1 ({variance[0]*100:.2f}% variance)")
-        plt.ylabel(f"PC2 ({variance[1]*100:.2f}% variance)")
-        plt.title("PCA Feature Space Analysis")
-        plt.grid(True)
-        plt.show()
+        ax.set_xlabel(f"PC1 ({variance[0]*100:.2f}% variance)")
+        ax.set_ylabel(f"PC2 ({variance[1]*100:.2f}% variance)")
+
+        title = "PCA Feature Space Analysis"
+
+        if dropped_count:
+
+            title += f"\n({dropped_count} recording(s) excluded -- mismatched feature-vector length)"
+
+        ax.set_title(title)
+        ax.grid(True)
+
+        open_child_window(
+            self.root,
+            _PCAPlotWindow,
+            fig,
+            "PCA Feature Space Analysis"
+        )

@@ -235,6 +235,8 @@ class AssessmentWindow:
 
         self.ddk_count = 0
 
+        self.assessment_submitted = False
+
         tk.Label(
             root,
             text="Patient Assessment",
@@ -746,160 +748,200 @@ class AssessmentWindow:
 
         return messagebox.askyesno("Recording Quality Warning", message)
 
+    # REPLACEMENT:
     def process_assessment(self):
 
-        all_files = self.vowel_files + self.ddk_files
+        # Hard stop: this exact AssessmentWindow instance (one patient
+        # encounter) has already been saved once. Re-clicking "Process
+        # Assessment" after returning from the results screen must not
+        # be able to write a second duplicate record for the same
+        # patient/recordings. Starting a new patient requires backing
+        # all the way out to the dashboard, which creates a fresh
+        # AssessmentWindow with assessment_submitted reset to False.
+        if self.assessment_submitted:
 
-        # Chain-of-custody / corruption check on the raw files, before
-        # anything else touches them (peak-clip check + SHA256 hash,
-        # printed to console for now -- see app/verifier.py).
-        for file in all_files:
-            verify_audio(file)
-
-        ambient_results = []
-
-        for file in all_files:
-
-            ambient_results.append(
-                extract_ambient_metrics(
-                    file
-                )
-            )
-
-        ambient_mean = self.average_metrics(
-            ambient_results
-        )
-
-        ambient_sd = self.metric_sd(
-            ambient_results
-        )
-
-        # Recording Quality Engine -- independent from both the
-        # clinical (vowel/ddk) and ambient-acoustic pipelines above.
-        # Runs on the RAW files (quality/noise metrics need to reflect
-        # what was actually recorded, not the filtered version).
-        recording_quality_results = []
-
-        for file in all_files:
-
-            recording_quality_results.append(
-                analyze_recording_quality(
-                    file
-                )
-            )
-
-        recording_quality_mean, recording_quality_sd = aggregate_recording_quality_metrics(
-            recording_quality_results
-        )
-
-        recording_quality_classification = classify_recording_quality(
-            recording_quality_mean
-        )
-
-        # ---- Gate: block (with clinician override) before any
-        # biomarker extraction runs on a flagged recording. ----
-        if not self._quality_gate_passed(
-            recording_quality_classification,
-            recording_quality_mean
-        ):
             messagebox.showinfo(
-                "Assessment Cancelled",
-                "Assessment was not saved. Re-record and try again."
+                "Already Submitted",
+                "This assessment has already been saved. Go back to "
+                "the dashboard and start a new assessment for the "
+                "next patient."
             )
+
             return
 
-        vowel_temp_files = []
-        ddk_temp_files = []
+        self.process_btn.config(state="disabled")
 
         try:
 
-            vowel_results = []
+            all_files = self.vowel_files + self.ddk_files
 
-            for file in self.vowel_files:
+            # Chain-of-custody / corruption check on the raw files,
+            # before anything else touches them (peak-clip check +
+            # SHA256 hash, printed to console for now -- see
+            # app/verifier.py).
+            for file in all_files:
+                verify_audio(file)
 
-                temp_path = self._preprocess_to_temp(file)
-                vowel_temp_files.append(temp_path)
+            ambient_results = []
 
-                vowel_results.append(
-                    extract_vowel_features(
-                        temp_path
+            for file in all_files:
+
+                ambient_results.append(
+                    extract_ambient_metrics(
+                        file
                     )
                 )
 
-            ddk_results = []
+            ambient_mean = self.average_metrics(
+                ambient_results
+            )
 
-            for file in self.ddk_files:
+            ambient_sd = self.metric_sd(
+                ambient_results
+            )
 
-                temp_path = self._preprocess_to_temp(file)
-                ddk_temp_files.append(temp_path)
+            recording_quality_results = []
 
-                ddk_results.append(
-                    extract_ddk_features(
-                        temp_path
+            for file in all_files:
+
+                recording_quality_results.append(
+                    analyze_recording_quality(
+                        file
                     )
                 )
 
-        finally:
+            recording_quality_mean, recording_quality_sd = aggregate_recording_quality_metrics(
+                recording_quality_results
+            )
 
-            for temp_path in vowel_temp_files + ddk_temp_files:
+            recording_quality_classification = classify_recording_quality(
+                recording_quality_mean
+            )
 
-                try:
-                    os.remove(temp_path)
-                except OSError:
-                    pass
+            if not self._quality_gate_passed(
+                recording_quality_classification,
+                recording_quality_mean
+            ):
+                messagebox.showinfo(
+                    "Assessment Cancelled",
+                    "Assessment was not saved. Re-record and try again."
+                )
 
-        vowel_mean = self.average_metrics(
-            vowel_results
-        )
+                # Not submitted -- let the clinician retry with the
+                # same or re-recorded trials.
+                self.process_btn.config(state="normal")
 
-        ddk_mean = self.average_metrics(
-            ddk_results
-        )
+                return
 
-        vowel_sd = self.metric_sd(
-            vowel_results
-        )
+            vowel_temp_files = []
+            ddk_temp_files = []
 
-        ddk_sd = self.metric_sd(
-            ddk_results
-        )
+            try:
 
-        save_assessment(
+                vowel_results = []
 
-            self.patient_name,
+                for file in self.vowel_files:
 
-            self.patient_id,
+                    temp_path = self._preprocess_to_temp(file)
+                    vowel_temp_files.append(temp_path)
 
-            self.age,
+                    vowel_results.append(
+                        extract_vowel_features(
+                            temp_path
+                        )
+                    )
 
-            self.sex,
+                ddk_results = []
 
-            vowel_results,
+                for file in self.ddk_files:
 
-            ddk_results,
+                    temp_path = self._preprocess_to_temp(file)
+                    ddk_temp_files.append(temp_path)
 
-            vowel_mean,
+                    ddk_results.append(
+                        extract_ddk_features(
+                            temp_path
+                        )
+                    )
 
-            ddk_mean,
+            finally:
 
-            ambient_mean,
+                for temp_path in vowel_temp_files + ddk_temp_files:
 
-            self.vowel_files,
+                    try:
+                        os.remove(temp_path)
+                    except OSError:
+                        pass
 
-            self.ddk_files,
+            vowel_mean = self.average_metrics(
+                vowel_results
+            )
 
-            vowel_sd,
+            ddk_mean = self.average_metrics(
+                ddk_results
+            )
 
-            ddk_sd,
+            vowel_sd = self.metric_sd(
+                vowel_results
+            )
 
-            ambient_sd,
+            ddk_sd = self.metric_sd(
+                ddk_results
+            )
 
-            recording_quality_mean,
+            save_assessment(
 
-            recording_quality_sd,
+                self.patient_name,
 
-            recording_quality_classification
-        )
+                self.patient_id,
+
+                self.age,
+
+                self.sex,
+
+                vowel_results,
+
+                ddk_results,
+
+                vowel_mean,
+
+                ddk_mean,
+
+                ambient_mean,
+
+                self.vowel_files,
+
+                self.ddk_files,
+
+                vowel_sd,
+
+                ddk_sd,
+
+                ambient_sd,
+
+                recording_quality_mean,
+
+                recording_quality_sd,
+
+                recording_quality_classification
+            )
+
+            # Only mark as submitted once the save has actually
+            # succeeded -- an exception above leaves this False so the
+            # except block below can safely re-enable the button.
+            self.assessment_submitted = True
+
+        except Exception as e:
+
+            self.process_btn.config(state="normal")
+
+            messagebox.showerror(
+                "Processing Failed",
+                f"Assessment processing failed and nothing was saved:"
+                f"\n\n{e}\n\nYou can try again."
+            )
+
+            return
 
         from datetime import datetime
 

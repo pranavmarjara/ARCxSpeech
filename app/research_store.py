@@ -292,16 +292,26 @@ def load_baseline():
 # COMPUTE DRIFT
 # =====================================
 
+# REPLACEMENT:
 def compute_drift(
     baseline_aggregate,
     noise_aggregate
 ):
+    """
+    Returns (drift_results, skipped) where `skipped` lists (feature,
+    reason) for every feature that could NOT get a drift value, so
+    callers can tell the user something was left out instead of
+    silently showing a shorter table.
+    """
 
     drift_results = {}
+    skipped = []
 
     for feature in baseline_aggregate.keys():
 
         if feature not in noise_aggregate:
+
+            skipped.append((feature, "not present in this batch"))
             continue
 
         baseline_mean = baseline_aggregate[
@@ -313,6 +323,20 @@ def compute_drift(
         ]["mean"]
 
         if baseline_mean == 0:
+
+            # Relative drift is undefined at a zero baseline. Report
+            # absolute drift instead of just dropping the feature --
+            # count/percentage-type metrics (Silence %, Clipping %,
+            # Low-SNR Frame %) are exactly the ones most likely to
+            # have a legitimate zero baseline, and they're often the
+            # most diagnostically relevant ones to NOT lose silently.
+            drift_results[feature] = round(abs(noise_mean), 6)
+
+            skipped.append((
+                feature,
+                "zero baseline -- reported as absolute, not relative, drift"
+            ))
+
             continue
 
         drift = abs(
@@ -324,24 +348,29 @@ def compute_drift(
             6
         )
 
-    return drift_results    
+    return drift_results, skipped  
 
 # =====================================
 # FEATURE SURVIVABILITY RANKING
 # =====================================
 
+# REPLACEMENT:
 def rank_feature_survivability(
     baseline_aggregate,
     research_data
 ):
+    """
+    Returns (ranking, skipped_features) -- skipped_features lists
+    every baseline feature that produced NO ranking entry (zero
+    baseline mean, or no batch had any data for it) so the caller can
+    tell the user it was excluded instead of it just quietly not
+    appearing in the table.
+    """
 
     feature_drifts = {}
+    zero_baseline_features = set()
 
     baseline_features = baseline_aggregate.keys()
-
-    # ---------------------------------
-    # COLLECT DRIFTS
-    # ---------------------------------
 
     for feature in baseline_features:
 
@@ -352,17 +381,15 @@ def rank_feature_survivability(
         ]["mean"]
 
         if baseline_mean == 0:
-            continue
+
+            # Same reasoning as compute_drift(): don't just drop a
+            # feature because its baseline happens to be zero -- that
+            # disproportionately excludes count/percentage metrics
+            # that are often the most clinically interesting ones.
+            zero_baseline_features.add(feature)
 
         for batch_name, batch_data in research_data.items():
 
-            # .get(..., {}) rather than direct indexing: batches saved
-            # by an older version of save_batch (before the flat
-            # "aggregate" key existed, or under a different schema)
-            # won't have this key. Treat them as having no data for
-            # this feature instead of crashing the whole ranking over
-            # one legacy batch -- consistent with how save_batch
-            # itself already treats missing stage data elsewhere.
             aggregate = batch_data.get(
                 "aggregate",
                 {}
@@ -375,23 +402,28 @@ def rank_feature_survivability(
                 feature
             ]["mean"]
 
-            drift = abs(
-                noise_mean - baseline_mean
-            ) / abs(baseline_mean)
+            if baseline_mean == 0:
+
+                drift = abs(noise_mean)
+
+            else:
+
+                drift = abs(
+                    noise_mean - baseline_mean
+                ) / abs(baseline_mean)
 
             feature_drifts[
                 feature
             ].append(drift)
 
-    # ---------------------------------
-    # COMPUTE MEAN DRIFT
-    # ---------------------------------
-
     ranking = []
+    skipped_features = []
 
     for feature, drifts in feature_drifts.items():
 
         if len(drifts) == 0:
+
+            skipped_features.append(feature)
             continue
 
         mean_drift = float(
@@ -405,12 +437,10 @@ def rank_feature_survivability(
             "mean_drift": round(
                 mean_drift,
                 6
-            )
-        })
+            ),
 
-    # ---------------------------------
-    # SORT LOWEST DRIFT FIRST
-    # ---------------------------------
+            "absolute_drift": feature in zero_baseline_features
+        })
 
     ranking = sorted(
 
@@ -421,7 +451,7 @@ def rank_feature_survivability(
         ]
     )
 
-    return ranking
+    return ranking, skipped_features
 
 # =====================================
 # PCA ANALYSIS
@@ -461,8 +491,9 @@ def perform_pca_analysis(
 
     if len(feature_vectors) < 2:
 
-        return None, None, None
+        return None, None, None, 0
 
+    # REPLACEMENT:
     # Different batches can carry feature vectors of different lengths --
     # either because they mix tasks (Sustained Vowel vs DDK produce a
     # different number of features), or because they were saved under an
@@ -480,15 +511,19 @@ def perform_pca_analysis(
         lengths
     ).most_common(1)[0][0]
 
+    total_before = len(feature_vectors)
+
     filtered = [
         (vector, label)
         for vector, label in zip(feature_vectors, labels)
         if len(vector) == most_common_length
     ]
 
+    dropped_count = total_before - len(filtered)
+
     if len(filtered) < 2:
 
-        return None, None, None
+        return None, None, None, dropped_count
 
     feature_vectors, labels = zip(*filtered)
 
@@ -502,7 +537,7 @@ def perform_pca_analysis(
 
     if X.shape[0] < 2 or X.shape[1] < 2:
 
-        return None, None, None
+        return None, None, None, dropped_count
 
     pca = PCA(
         n_components=2
@@ -515,5 +550,6 @@ def perform_pca_analysis(
     return (
         transformed,
         labels,
-        explained_variance
+        explained_variance,
+        dropped_count
     )

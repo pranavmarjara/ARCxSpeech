@@ -34,17 +34,29 @@ class RecordingTimeoutError(RecordingError):
 # app forever.
 STALL_GRACE_SECONDS = 10
 
+# ADD:
+import itertools
+
+_trial_counter = itertools.count()
 
 def record_audio(
     duration,
     prefix="clinical"
 ):
 
-    timestamp = int(time.time())
+    # REPLACEMENT:
+    # Microsecond resolution + a process-local monotonic counter,
+    # instead of whole-second time.time(): two trials completing in
+    # the same wall-clock second (a fast retry after an error, or
+    # simply unlucky timing) used to silently overwrite each other's
+    # WAV file on disk with no warning.
+    timestamp = int(time.time() * 1_000_000)
+
+    trial_id = next(_trial_counter)
 
     filename = (
         f"{OUTPUT_DIR}/"
-        f"{prefix}_{timestamp}.wav"
+        f"{prefix}_{timestamp}_{trial_id}.wav"
     )
 
     total_samples = int(
@@ -142,10 +154,27 @@ def record_audio(
         (-1, CHANNELS)
     )
 
+    # REPLACEMENT:
     audio = (
         audio.astype(np.float32)
         / 32768.0
     )
+
+    # Catch a dead/disconnected mic at the moment of recording instead
+    # of only finding out later, downstream, when the Recording Quality
+    # gate flags near-silence after all 6 trials are already done. This
+    # is the same failure mode as the all-zero I2S readout bug from
+    # hardware bringup -- this doesn't prevent a regression, but it
+    # surfaces it immediately instead of silently saving a dead file.
+    peak_per_channel = np.max(np.abs(audio), axis=0)
+
+    if np.all(peak_per_channel < 0.001):
+
+        print(
+            "\nWARNING: recorded audio is near-silent on all channels "
+            f"(peak={peak_per_channel}). Check microphone connections "
+            "before using this trial."
+        )
 
     sf.write(
         filename,
