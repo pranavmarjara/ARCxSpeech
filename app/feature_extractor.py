@@ -56,8 +56,11 @@ def load_audio(filepath):
 # 2. Merge peaks not separated by a sufficient intensity dip
 #    (avoids double-counting a single syllable).
 # 3. Keep only peaks landing on a voiced (pitched) frame.
-# Used exclusively for Speech Rate, independent of the DDK
-# amplitude-peak detector used for DDK Repetition Rate/Count.
+# Used exclusively for Speech Rate. DDK Repetition Rate/Count uses
+# the same dynamic-threshold + voicing-check principle, but as a
+# separate detector tuned for DDK's faster repetition cadence
+# (see _ddk_intensity_contour and extract_ddk_features below) --
+# they're independently computed, not sharing state.
 # =====================================
 
 def count_syllable_nuclei(filepath):

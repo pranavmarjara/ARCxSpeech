@@ -677,7 +677,7 @@ class AssessmentWindow:
             )
 
 
-    # REPLACEMENT:
+
     def _preprocess_to_temp(self, filepath):
         """
         Applies the approved fixed-coefficient Path-1 pipeline (DC

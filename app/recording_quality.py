@@ -395,7 +395,7 @@ def _cross_snr_base_score(cross_snr_db):
         return 20
 
 
-# REPLACEMENT:
+
 def _confidence_from_spread(cross_snr_db, wada_snr_db, mean_seg_snr_db):
     """
     Confidence is based on agreement between the two directly-measured
