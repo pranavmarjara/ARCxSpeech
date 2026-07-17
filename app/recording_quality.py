@@ -395,20 +395,41 @@ def _cross_snr_base_score(cross_snr_db):
         return 20
 
 
+# REPLACEMENT:
 def _confidence_from_spread(cross_snr_db, wada_snr_db, mean_seg_snr_db):
+    """
+    Confidence is based on agreement between the two directly-measured
+    SNR estimates (cross-channel and segmental -- both computed
+    straight from RMS ratios). WADA-SNR is a model-based heuristic
+    (see compute_wada_snr's docstring) and is deliberately excluded
+    from the primary spread so an uncalibrated WADA reading alone
+    can't drag confidence down on its own. It's still used as a
+    secondary corroborating check: if it disagrees sharply with the
+    two measured estimates, confidence is capped at "Medium" instead
+    of reaching "High".
+    """
 
-    estimates = [cross_snr_db, wada_snr_db, mean_seg_snr_db]
+    primary_estimates = [cross_snr_db, mean_seg_snr_db]
 
-    spread = max(estimates) - min(estimates)
+    primary_spread = max(primary_estimates) - min(primary_estimates)
 
-    if spread <= CONFIDENCE_HIGH_SPREAD_DB:
-        return "High"
+    if primary_spread <= CONFIDENCE_HIGH_SPREAD_DB:
+        confidence = "High"
 
-    elif spread <= CONFIDENCE_MEDIUM_SPREAD_DB:
-        return "Medium"
+    elif primary_spread <= CONFIDENCE_MEDIUM_SPREAD_DB:
+        confidence = "Medium"
 
     else:
-        return "Low"
+        confidence = "Low"
+
+    primary_mean = sum(primary_estimates) / len(primary_estimates)
+
+    wada_disagreement = abs(wada_snr_db - primary_mean)
+
+    if wada_disagreement > CONFIDENCE_MEDIUM_SPREAD_DB and confidence == "High":
+        confidence = "Medium"
+
+    return confidence
 
 
 def classify_recording_quality(metrics):

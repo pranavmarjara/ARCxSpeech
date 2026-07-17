@@ -387,100 +387,129 @@ def extract_vowel_features(filepath):
 #       DDK Interval Std (secondary)
 # =====================================
 
+def _ddk_intensity_contour(filepath, silence_db=-25):
+    """
+    Dynamic-threshold intensity contour for DDK repetition detection --
+    same principle as count_syllable_nuclei's threshold (99th-percentile
+    intensity - silence_db, floored at the recording's minimum), instead
+    of a single global-mean amplitude threshold. This keeps DC offset
+    or low-frequency noise from silently shifting where "speech" is
+    drawn, and gives repetition peaks a voicing check to lean on.
+    """
+
+    snd = parselmouth.Sound(filepath)
+
+    intensity = snd.to_intensity(minimum_pitch=100.0)
+
+    intensity_values = intensity.values[0]
+    intensity_times = intensity.xs()
+
+    if len(intensity_values) == 0:
+        return snd, intensity_times, intensity_values, 0.0, 0.01
+
+    max_99_intensity = np.percentile(intensity_values, 99)
+
+    threshold = max_99_intensity + silence_db
+
+    threshold = max(threshold, np.min(intensity_values))
+
+    if len(intensity_times) > 1:
+        time_step = float(intensity_times[1] - intensity_times[0])
+    else:
+        time_step = 0.01
+
+    return snd, intensity_times, intensity_values, threshold, time_step
+
 def extract_ddk_features(filepath):
 
     patient_audio, ambient_audio, sr, duration = load_audio(
         filepath
     )
 
-    y_16k = librosa.resample(
-        patient_audio,
-        orig_sr=sr,
-        target_sr=16000
+    snd, intensity_times, intensity_values, threshold, time_step = _ddk_intensity_contour(
+        filepath
     )
 
-    envelope = np.abs(
-        y_16k
-    )
+    if len(intensity_values) == 0:
 
-    threshold = np.mean(
-        envelope
-    )
+        speech_time = 0.0
+        pause_time = duration
+        pause_ratio = 0
 
-    speech_frames = (
-        envelope > threshold
-    )
-
-    speech_time = (
-        np.sum(
-            speech_frames
-        ) / 16000
-    )
-
-    pause_time = max(
-        duration - speech_time,
-        0
-    )
-
-    if speech_time > 0:
-
-        pause_ratio = (
-            pause_time /
-            speech_time
-        )
+        repetition_count = 0
+        repetition_rate = 0
+        interval_mean = 0
+        interval_std = 0
+        ddk_regularity = 0
 
     else:
 
-        pause_ratio = 0
+        speech_frames = intensity_values > threshold
 
-    peaks, _ = find_peaks(
-        envelope,
-        distance=16000 // 4,
-        height=np.mean(envelope)
-    )
+        speech_time = float(np.sum(speech_frames)) * time_step
 
-    repetition_count = len(peaks)
+        pause_time = max(duration - speech_time, 0)
 
-    if repetition_count > 1:
+        if speech_time > 0:
+            pause_ratio = pause_time / speech_time
+        else:
+            pause_ratio = 0
 
-        intervals = np.diff(
-            peaks
-        ) / 16000
+        # Minimum spacing between candidate DDK repetition peaks
+        # (~120ms) -- fast enough not to merge genuine rapid
+        # /pa-ta-ka/ repetitions, but still guards against
+        # noise-driven micro-peaks inflating the count.
+        min_distance = max(int(0.12 / time_step), 1)
 
-        repetition_rate = (
-            repetition_count / duration
+        peak_indices, _ = find_peaks(
+            intensity_values,
+            height=threshold,
+            distance=min_distance
         )
 
-        interval_mean = float(
-            np.mean(intervals)
+        # Voicing check: keep only peaks landing on a voiced (pitched)
+        # frame, same principle as count_syllable_nuclei, so a mic
+        # pop or breath burst can't be counted as a repetition.
+        pitch = snd.to_pitch(
+            time_step=0.01,
+            pitch_floor=75,
+            pitch_ceiling=500
         )
 
-        interval_std = float(
-            np.std(intervals)
-        )
+        valid_peak_times = []
 
-        # DDK Regularity = coefficient of variation of intervals (%)
-        # (std(intervals) / mean(intervals)) x 100
-        # Lower value = more regular timing.
-        if interval_mean > 0:
+        for idx in peak_indices:
 
-            ddk_regularity = (
-                interval_std / interval_mean
-            ) * 100
+            t = intensity_times[idx]
+
+            f0_at_t = pitch.get_value_at_time(t)
+
+            if not np.isnan(f0_at_t) and f0_at_t > 0:
+
+                valid_peak_times.append(t)
+
+        repetition_count = len(valid_peak_times)
+
+        if repetition_count > 1:
+
+            intervals = np.diff(valid_peak_times)
+
+            repetition_rate = repetition_count / duration
+
+            interval_mean = float(np.mean(intervals))
+            interval_std = float(np.std(intervals))
+
+            if interval_mean > 0:
+                ddk_regularity = (interval_std / interval_mean) * 100
+            else:
+                ddk_regularity = 0
 
         else:
 
+            repetition_rate = 0
+            interval_mean = 0
+            interval_std = 0
             ddk_regularity = 0
-
-    else:
-
-        repetition_rate = 0
-
-        interval_mean = 0
-
-        interval_std = 0
-
-        ddk_regularity = 0
 
     # -------------------------
     # SPEECH RATE (independent of DDK repetition detection)

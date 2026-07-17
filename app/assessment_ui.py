@@ -4,6 +4,10 @@ from tkinter import messagebox
 
 import threading
 import time
+import os
+import tempfile
+
+import soundfile as sf
 
 from app.recorder import record_audio
 
@@ -25,6 +29,15 @@ from app.recording_quality import (
     analyze_recording_quality,
     aggregate_recording_quality_metrics,
     classify_recording_quality
+)
+
+from app.preprocessing import (
+    remove_dc_offset,
+    apply_frequency_filtering
+)
+
+from app.verifier import (
+    verify_audio
 )
 
 from app.assessment_store import (
@@ -664,31 +677,86 @@ class AssessmentWindow:
             )
 
 
+    # REPLACEMENT:
+    def _preprocess_to_temp(self, filepath):
+        """
+        Applies the approved fixed-coefficient Path-1 pipeline (DC
+        offset removal + frequency filtering, app/preprocessing.py) to
+        a raw recording and writes the result to a temp WAV. This is
+        the same 2-layer pipeline already validated in the R&D
+        "2 Layers" stage of app/staged_extraction.py -- it now also
+        runs in the real clinical path instead of only in R&D.
+        """
+
+        raw_audio, sr = sf.read(
+            filepath,
+            dtype="float32",
+            always_2d=False
+        )
+
+        audio_dc = remove_dc_offset(raw_audio)
+
+        audio_clean = apply_frequency_filtering(audio_dc, sr)
+
+        fd, temp_path = tempfile.mkstemp(suffix=".wav")
+        os.close(fd)
+
+        safe_audio = np.clip(audio_clean, -1.0, 1.0).astype(np.float32)
+
+        sf.write(temp_path, safe_audio, sr, subtype="PCM_16")
+
+        return temp_path
+
+    def _quality_gate_passed(self, recording_quality_classification, recording_quality_mean):
+        """
+        Turns the Recording Quality Engine's output into an actual
+        gate instead of just a displayed label. Blocks (with an
+        override option) on a 1-star rating, detected clipping, or
+        detected extended silence -- the three conditions the engine
+        itself already flags as reliability risks.
+        """
+
+        rating = recording_quality_classification.get(
+            "Recording Quality Rating", ""
+        )
+
+        clipping = bool(recording_quality_mean.get("Clipping Detected", False))
+        silence = bool(recording_quality_mean.get("Silence Detected", False))
+
+        if rating != "★☆☆☆☆" and not clipping and not silence:
+            return True
+
+        reasons = []
+
+        if rating == "★☆☆☆☆":
+            reasons.append("Recording Quality Rating is 1 star (Very Poor)")
+
+        if clipping:
+            reasons.append("clipping was detected")
+
+        if silence:
+            reasons.append("extended silence was detected")
+
+        message = (
+            "This session's recording quality is flagged:\n\n"
+            + "\n".join(f"- {r}" for r in reasons)
+            + "\n\nBiomarker values may be unreliable. Proceed with "
+              "analysis anyway?"
+        )
+
+        return messagebox.askyesno("Recording Quality Warning", message)
+
     def process_assessment(self):
 
-        vowel_results = []
+        all_files = self.vowel_files + self.ddk_files
 
-        for file in self.vowel_files:
-
-            vowel_results.append(
-                extract_vowel_features(
-                    file
-                )
-            )
-
-        ddk_results = []
-
-        for file in self.ddk_files:
-
-            ddk_results.append(
-                extract_ddk_features(
-                    file
-                )
-            )
+        # Chain-of-custody / corruption check on the raw files, before
+        # anything else touches them (peak-clip check + SHA256 hash,
+        # printed to console for now -- see app/verifier.py).
+        for file in all_files:
+            verify_audio(file)
 
         ambient_results = []
-
-        all_files = self.vowel_files + self.ddk_files
 
         for file in all_files:
 
@@ -708,10 +776,8 @@ class AssessmentWindow:
 
         # Recording Quality Engine -- independent from both the
         # clinical (vowel/ddk) and ambient-acoustic pipelines above.
-        # analyze_recording_quality() computes metrics only; the
-        # classifier is run once, on the trial-averaged metrics, to
-        # produce a single session-level rating/environment/
-        # recommendation/confidence.
+        # Runs on the RAW files (quality/noise metrics need to reflect
+        # what was actually recorded, not the filtered version).
         recording_quality_results = []
 
         for file in all_files:
@@ -729,6 +795,58 @@ class AssessmentWindow:
         recording_quality_classification = classify_recording_quality(
             recording_quality_mean
         )
+
+        # ---- Gate: block (with clinician override) before any
+        # biomarker extraction runs on a flagged recording. ----
+        if not self._quality_gate_passed(
+            recording_quality_classification,
+            recording_quality_mean
+        ):
+            messagebox.showinfo(
+                "Assessment Cancelled",
+                "Assessment was not saved. Re-record and try again."
+            )
+            return
+
+        vowel_temp_files = []
+        ddk_temp_files = []
+
+        try:
+
+            vowel_results = []
+
+            for file in self.vowel_files:
+
+                temp_path = self._preprocess_to_temp(file)
+                vowel_temp_files.append(temp_path)
+
+                vowel_results.append(
+                    extract_vowel_features(
+                        temp_path
+                    )
+                )
+
+            ddk_results = []
+
+            for file in self.ddk_files:
+
+                temp_path = self._preprocess_to_temp(file)
+                ddk_temp_files.append(temp_path)
+
+                ddk_results.append(
+                    extract_ddk_features(
+                        temp_path
+                    )
+                )
+
+        finally:
+
+            for temp_path in vowel_temp_files + ddk_temp_files:
+
+                try:
+                    os.remove(temp_path)
+                except OSError:
+                    pass
 
         vowel_mean = self.average_metrics(
             vowel_results
