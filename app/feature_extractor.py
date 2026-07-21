@@ -40,11 +40,21 @@ def load_audio(filepath):
         sr=sr
     )
 
+    # Build Praat's Sound directly from the isolated patient channel
+    # array, instead of letting downstream code call
+    # parselmouth.Sound(filepath), which reloads the raw stereo file
+    # and silently averages both channels to mono before analysis.
+    patient_sound = parselmouth.Sound(
+        patient_audio.astype(np.float64),
+        sampling_frequency=sr
+    )
+
     return (
         patient_audio,
         ambient_audio,
         sr,
-        duration
+        duration,
+        patient_sound
     )
 
 
@@ -63,15 +73,11 @@ def load_audio(filepath):
 # they're independently computed, not sharing state.
 # =====================================
 
-def count_syllable_nuclei(filepath):
+def count_syllable_nuclei(snd):
 
     silence_db = -25
 
     min_dip_db = 2
-
-    snd = parselmouth.Sound(
-        filepath
-    )
 
     intensity = snd.to_intensity(
         minimum_pitch=100.0
@@ -192,7 +198,7 @@ def count_syllable_nuclei(filepath):
 
 def extract_vowel_features(filepath):
 
-    patient_audio, ambient_audio, sr, duration = load_audio(
+    patient_audio, ambient_audio, sr, duration, snd = load_audio(
         filepath
     )
 
@@ -242,10 +248,6 @@ def extract_vowel_features(filepath):
     # -------------------------
     # PRAAT FEATURES
     # -------------------------
-
-    snd = parselmouth.Sound(
-        filepath
-    )
 
     formant = snd.to_formant_burg()
 
@@ -390,7 +392,7 @@ def extract_vowel_features(filepath):
 #       DDK Interval Std (secondary)
 # =====================================
 
-def _ddk_intensity_contour(filepath, silence_db=-25):
+def _ddk_intensity_contour(snd, silence_db=-25):
     """
     Dynamic-threshold intensity contour for DDK repetition detection --
     same principle as count_syllable_nuclei's threshold (99th-percentile
@@ -400,7 +402,7 @@ def _ddk_intensity_contour(filepath, silence_db=-25):
     drawn, and gives repetition peaks a voicing check to lean on.
     """
 
-    snd = parselmouth.Sound(filepath)
+    
 
     intensity = snd.to_intensity(minimum_pitch=100.0)
 
@@ -425,12 +427,12 @@ def _ddk_intensity_contour(filepath, silence_db=-25):
 
 def extract_ddk_features(filepath):
 
-    patient_audio, ambient_audio, sr, duration = load_audio(
+    patient_audio, ambient_audio, sr, duration, snd = load_audio(
         filepath
     )
 
     snd, intensity_times, intensity_values, threshold, time_step = _ddk_intensity_contour(
-        filepath
+        snd
     )
 
     if len(intensity_values) == 0:
@@ -520,7 +522,7 @@ def extract_ddk_features(filepath):
     # -------------------------
 
     syllable_count = count_syllable_nuclei(
-        filepath
+        snd
     )
 
     if duration > 0:
