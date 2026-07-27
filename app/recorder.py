@@ -8,12 +8,21 @@ from app.config import (
     SAMPLE_RATE,
     CHANNELS,
     OUTPUT_DIR,
+    PATIENT_AUDIO_DIR,
+    AMBIENT_AUDIO_DIR,
+    PATIENT_CHANNEL,
+    AMBIENT_CHANNEL,
     SERIAL_PORT,
     SERIAL_BAUD
 )
 
 os.makedirs(
-    OUTPUT_DIR,
+    PATIENT_AUDIO_DIR,
+    exist_ok=True
+)
+
+os.makedirs(
+    AMBIENT_AUDIO_DIR,
     exist_ok=True
 )
 
@@ -54,9 +63,14 @@ def record_audio(
 
     trial_id = next(_trial_counter)
 
-    filename = (
-        f"{OUTPUT_DIR}/"
-        f"{prefix}_{timestamp}_{trial_id}.wav"
+    patient_filename = (
+        f"{PATIENT_AUDIO_DIR}/"
+        f"{prefix}_patient_audio_{timestamp}_{trial_id}.wav"
+    )
+
+    ambient_filename = (
+        f"{AMBIENT_AUDIO_DIR}/"
+        f"{prefix}_ambient_audio_{timestamp}_{trial_id}.wav"
     )
 
     total_samples = int(
@@ -176,14 +190,25 @@ def record_audio(
             "before using this trial."
         )
 
+    patient_audio = audio[:, PATIENT_CHANNEL]
+    ambient_audio = audio[:, AMBIENT_CHANNEL]
+
     sf.write(
-        filename,
-        audio,
+        patient_filename,
+        patient_audio,
+        SAMPLE_RATE,
+        subtype="PCM_16"
+    )
+
+    sf.write(
+        ambient_filename,
+        ambient_audio,
         SAMPLE_RATE,
         subtype="PCM_16"
     )
 
     return (
-        filename,
+        patient_filename,
+        ambient_filename,
         audio
     )

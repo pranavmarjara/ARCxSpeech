@@ -14,9 +14,11 @@ def _detect_serial_port():
     Resolution order:
       1. ARCXSPEECH_SERIAL_PORT env var, if set -- always wins, so a
          specific machine/device can be pinned without editing code.
-      2. Auto-detect via pyserial's port listing -- picks the first
-         connected serial device, which covers the common case of
-         exactly one USB acquisition device plugged in.
+      2. Match by the board's known USB VID:PID (2886:0056) --
+         identifies the actual acquisition device regardless of which
+         COM number Windows assigns it or what else is plugged in
+         (e.g. Bluetooth virtual COM ports have no VID/PID and would
+         never match).
       3. Platform-specific fallback guess, used only if neither of the
          above found anything (e.g. device not plugged in yet at
          import time). recorder.py already raises a clear
@@ -29,14 +31,19 @@ def _detect_serial_port():
     if override:
         return override
 
+    BOARD_VID = 0x2886
+    BOARD_PID = 0x0056
+
     try:
 
         from serial.tools import list_ports
 
         ports = list(list_ports.comports())
 
-        if ports:
-            return ports[0].device
+        for p in ports:
+
+            if p.vid == BOARD_VID and p.pid == BOARD_PID:
+                return p.device
 
     except Exception:
 
@@ -74,6 +81,10 @@ VOWEL_DURATION = 5
 DDK_DURATION = 10
 
 OUTPUT_DIR = "recordings"
+
+PATIENT_AUDIO_DIR = os.path.join(OUTPUT_DIR, "patient_audio")
+
+AMBIENT_AUDIO_DIR = os.path.join(OUTPUT_DIR, "ambient_audio")
 
 # ============================================================
 # Preprocessing pipeline -- Layers 1 & 2 (used by app/preprocessing.py

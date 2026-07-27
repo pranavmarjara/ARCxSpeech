@@ -16,34 +16,35 @@ from scipy.signal import find_peaks
 
 def load_audio(filepath):
 
-    # Load stereo audio without converting to mono
+    # filepath now points at the isolated patient-audio mono WAV
+    # written by recorder.py (recordings/patient_audio/...) -- no
+    # more stereo channel splitting needed here.
     audio, sr = librosa.load(
         filepath,
         sr=None,
         mono=False
     )
 
-    # If mono recording somehow arrives,
-    # keep backward compatibility.
     if audio.ndim == 1:
 
         patient_audio = audio
-        ambient_audio = np.zeros_like(audio)
 
     else:
 
+        # Defensive fallback in case a stereo file is ever passed in
+        # (e.g. an old pre-split recording).
         patient_audio = audio[PATIENT_CHANNEL]
-        ambient_audio = audio[AMBIENT_CHANNEL]
+
+    # ambient_audio is no longer read from this file; kept as a zero
+    # array so the 5-value return signature (and every caller that
+    # unpacks it) doesn't need to change.
+    ambient_audio = np.zeros_like(patient_audio)
 
     duration = librosa.get_duration(
         y=patient_audio,
         sr=sr
     )
 
-    # Build Praat's Sound directly from the isolated patient channel
-    # array, instead of letting downstream code call
-    # parselmouth.Sound(filepath), which reloads the raw stereo file
-    # and silently averages both channels to mono before analysis.
     patient_sound = parselmouth.Sound(
         patient_audio.astype(np.float64),
         sampling_frequency=sr

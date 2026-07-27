@@ -523,12 +523,12 @@ class AssessmentWindow:
 
             try:
 
-                filepath, audio = record_audio(
+                patient_path, ambient_path, audio = record_audio(
                     duration,
                     prefix=prefix
                 )
 
-                result["filepath"] = filepath
+                result["filepath"] = (patient_path, ambient_path)
                 result["audio"] = audio
 
             except Exception as e:
@@ -779,16 +779,17 @@ class AssessmentWindow:
             # before anything else touches them (peak-clip check +
             # SHA256 hash, printed to console for now -- see
             # app/verifier.py).
-            for file in all_files:
-                verify_audio(file)
+            for patient_path, ambient_path in all_files:
+                verify_audio(patient_path)
+                verify_audio(ambient_path)
 
             ambient_results = []
 
-            for file in all_files:
+            for patient_path, ambient_path in all_files:
 
                 ambient_results.append(
                     extract_ambient_metrics(
-                        file
+                        ambient_path
                     )
                 )
 
@@ -802,11 +803,12 @@ class AssessmentWindow:
 
             recording_quality_results = []
 
-            for file in all_files:
+            for patient_path, ambient_path in all_files:
 
                 recording_quality_results.append(
                     analyze_recording_quality(
-                        file
+                        patient_path,
+                        ambient_path
                     )
                 )
 
@@ -840,9 +842,9 @@ class AssessmentWindow:
 
                 vowel_results = []
 
-                for file in self.vowel_files:
+                for patient_path, ambient_path in self.vowel_files:
 
-                    temp_path = self._preprocess_to_temp(file)
+                    temp_path = self._preprocess_to_temp(patient_path)
                     vowel_temp_files.append(temp_path)
 
                     vowel_results.append(
@@ -853,9 +855,9 @@ class AssessmentWindow:
 
                 ddk_results = []
 
-                for file in self.ddk_files:
+                for patient_path, ambient_path in self.ddk_files:
 
-                    temp_path = self._preprocess_to_temp(file)
+                    temp_path = self._preprocess_to_temp(patient_path)
                     ddk_temp_files.append(temp_path)
 
                     ddk_results.append(

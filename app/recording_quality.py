@@ -71,22 +71,25 @@ EPS = 1e-10
 # Loading / channel split
 # ===========================================================
 
-def _load_channels(filepath):
+def _load_channels(patient_filepath, ambient_filepath):
     """
-    Reads the stereo WAV and splits it into patient / ambient
-    channels using the same PATIENT_CHANNEL / AMBIENT_CHANNEL mapping
-    as the rest of the app (app/config.py). Returns float32 arrays
-    in the -1..1 range plus the sample rate.
+    Reads the separate patient-audio and ambient-audio mono WAVs
+    (written by recorder.py into recordings/patient_audio/ and
+    recordings/ambient_audio/) and returns float32 arrays in the
+    -1..1 range plus the sample rate.
     """
 
-    audio, sr = sf.read(
-        filepath,
+    patient, sr = sf.read(
+        patient_filepath,
         dtype="float32",
-        always_2d=True
+        always_2d=False
     )
 
-    patient = audio[:, PATIENT_CHANNEL]
-    ambient = audio[:, AMBIENT_CHANNEL]
+    ambient, _ = sf.read(
+        ambient_filepath,
+        dtype="float32",
+        always_2d=False
+    )
 
     return patient, ambient, sr
 
@@ -357,9 +360,9 @@ def detect_silence(patient, sr):
 # Analyzer entry point -- metrics only, no classification
 # ===========================================================
 
-def analyze_recording_quality(filepath):
+def analyze_recording_quality(patient_filepath, ambient_filepath):
 
-    patient, ambient, sr = _load_channels(filepath)
+    patient, ambient, sr = _load_channels(patient_filepath, ambient_filepath)
 
     metrics = {}
 

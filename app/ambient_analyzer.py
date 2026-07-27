@@ -8,6 +8,8 @@ from app.config import (
 
 def extract_ambient_metrics(filepath):
 
+    # filepath now points at the isolated ambient-audio mono WAV
+    # written by recorder.py (recordings/ambient_audio/...).
     audio, sr = librosa.load(
         filepath,
         sr=None,
@@ -16,10 +18,11 @@ def extract_ambient_metrics(filepath):
 
     if audio.ndim == 1:
 
-        ambient = np.zeros_like(audio)
+        ambient = audio
 
     else:
 
+        # Defensive fallback in case a stereo file is ever passed in.
         ambient = audio[AMBIENT_CHANNEL]
 
     rms = librosa.feature.rms(
