@@ -1,0 +1,1308 @@
+[
+  {
+    "timestamp": "2026-07-05 16:00:51",
+    "patient_name": "Goyam",
+    "patient_id": "1",
+    "age": 19,
+    "sex": "Male",
+    "vowel_trials": [
+      {
+        "Sample Rate": 48000,
+        "Duration (sec)": 5.0,
+        "RMS Mean": 0.283154,
+        "RMS Std": 0.080195,
+        "ZCR Mean": 0.067578,
+        "Spectral Centroid": 3009.084,
+        "Spectral Rolloff": 4967.551,
+        "F0 Mean": 146.558,
+        "F0 Std": 2.218,
+        "F0 Min": 143.065,
+        "F0 Max": 152.45,
+        "F1 Mean": 796.044,
+        "F2 Mean": 1279.89,
+        "HNR": 21.376,
+        "Jitter Local": 0.002512,
+        "F0 Range": 9.385,
+        "Pitch Variability": 2.218,
+        "Intensity Variability": 0.080195,
+        "Shimmer Local": 0.022859
+      },
+      {
+        "Sample Rate": 48000,
+        "Duration (sec)": 5.0,
+        "RMS Mean": 0.288122,
+        "RMS Std": 0.080039,
+        "ZCR Mean": 0.068904,
+        "Spectral Centroid": 3188.365,
+        "Spectral Rolloff": 5001.582,
+        "F0 Mean": 143.22,
+        "F0 Std": 1.613,
+        "F0 Min": 140.607,
+        "F0 Max": 147.257,
+        "F1 Mean": 772.314,
+        "F2 Mean": 1257.629,
+        "HNR": 18.911,
+        "Jitter Local": 0.003584,
+        "F0 Range": 6.65,
+        "Pitch Variability": 1.613,
+        "Intensity Variability": 0.080039,
+        "Shimmer Local": 0.021476
+      },
+      {
+        "Sample Rate": 48000,
+        "Duration (sec)": 5.0,
+        "RMS Mean": 0.303917,
+        "RMS Std": 0.08448,
+        "ZCR Mean": 0.074798,
+        "Spectral Centroid": 2954.699,
+        "Spectral Rolloff": 4962.054,
+        "F0 Mean": 144.211,
+        "F0 Std": 1.37,
+        "F0 Min": 142.241,
+        "F0 Max": 148.11,
+        "F1 Mean": 765.734,
+        "F2 Mean": 1239.111,
+        "HNR": 18.585,
+        "Jitter Local": 0.003671,
+        "F0 Range": 5.869,
+        "Pitch Variability": 1.37,
+        "Intensity Variability": 0.08448,
+        "Shimmer Local": 0.026477
+      }
+    ],
+    "ddk_trials": [
+      {
+        "Sample Rate": 48000,
+        "Duration (sec)": 10.0,
+        "RMS Mean": 0.159928,
+        "RMS Std": 0.137046,
+        "ZCR Mean": 0.059231,
+        "Spectral Centroid": 3440.106,
+        "Spectral Rolloff": 7020.706,
+        "DDK Repetition Count": 22,
+        "DDK Repetition Rate": 2.2,
+        "DDK Interval Mean": 0.447,
+        "DDK Regularity": 0.15,
+        "Speech Rate": 2.2,
+        "Mean Pause Duration": 0.001,
+        "Pause/Speech Ratio": 2.105,
+        "DDK Interval Std": 0.15
+      },
+      {
+        "Sample Rate": 48000,
+        "Duration (sec)": 10.0,
+        "RMS Mean": 0.152851,
+        "RMS Std": 0.134736,
+        "ZCR Mean": 0.061318,
+        "Spectral Centroid": 3506.557,
+        "Spectral Rolloff": 7251.383,
+        "DDK Repetition Count": 23,
+        "DDK Repetition Rate": 2.3,
+        "DDK Interval Mean": 0.436,
+        "DDK Regularity": 0.136,
+        "Speech Rate": 2.3,
+        "Mean Pause Duration": 0.001,
+        "Pause/Speech Ratio": 2.135,
+        "DDK Interval Std": 0.136
+      },
+      {
+        "Sample Rate": 48000,
+        "Duration (sec)": 10.0,
+        "RMS Mean": 0.153544,
+        "RMS Std": 0.140548,
+        "ZCR Mean": 0.061081,
+        "Spectral Centroid": 3527.757,
+        "Spectral Rolloff": 7452.001,
+        "DDK Repetition Count": 21,
+        "DDK Repetition Rate": 2.1,
+        "DDK Interval Mean": 0.467,
+        "DDK Regularity": 0.152,
+        "Speech Rate": 2.1,
+        "Mean Pause Duration": 0.001,
+        "Pause/Speech Ratio": 2.201,
+        "DDK Interval Std": 0.152
+      }
+    ],
+    "vowel_mean": {
+      "Sample Rate": 48000.0,
+      "Duration (sec)": 5.0,
+      "RMS Mean": 0.292,
+      "RMS Std": 0.082,
+      "ZCR Mean": 0.07,
+      "Spectral Centroid": 3050.716,
+      "Spectral Rolloff": 4977.062,
+      "F0 Mean": 144.663,
+      "F0 Std": 1.734,
+      "F0 Min": 141.971,
+      "F0 Max": 149.272,
+      "F1 Mean": 778.031,
+      "F2 Mean": 1258.877,
+      "HNR": 19.624,
+      "Jitter Local": 0.003,
+      "F0 Range": 7.301,
+      "Pitch Variability": 1.734,
+      "Intensity Variability": 0.082,
+      "Shimmer Local": 0.024
+    },
+    "ddk_mean": {
+      "Sample Rate": 48000.0,
+      "Duration (sec)": 10.0,
+      "RMS Mean": 0.155,
+      "RMS Std": 0.137,
+      "ZCR Mean": 0.061,
+      "Spectral Centroid": 3491.473,
+      "Spectral Rolloff": 7241.363,
+      "DDK Repetition Count": 22.0,
+      "DDK Repetition Rate": 2.2,
+      "DDK Interval Mean": 0.45,
+      "DDK Regularity": 0.146,
+      "Speech Rate": 2.2,
+      "Mean Pause Duration": 0.001,
+      "Pause/Speech Ratio": 2.147,
+      "DDK Interval Std": 0.146
+    },
+    "vowel_recordings": [
+      "recordings/vowel_1783247376.wav",
+      "recordings/vowel_1783247386.wav",
+      "recordings/vowel_1783247395.wav"
+    ],
+    "ddk_recordings": [
+      "recordings/ddk_1783247405.wav",
+      "recordings/ddk_1783247419.wav",
+      "recordings/ddk_1783247434.wav"
+    ]
+  },
+  {
+    "timestamp": "2026-07-06 00:24:35",
+    "patient_name": "pp",
+    "patient_id": "44",
+    "age": 33,
+    "sex": "Female",
+    "vowel_trials": [
+      {
+        "F0 Mean": 111.796,
+        "F0 Min": 109.051,
+        "F0 Max": 117.555,
+        "F1 Mean": 851.507,
+        "F2 Mean": 1693.624,
+        "HNR": 12.108,
+        "Jitter Local": 0.620632
+      },
+      {
+        "F0 Mean": 109.324,
+        "F0 Min": 50.0,
+        "F0 Max": 117.555,
+        "F1 Mean": 677.614,
+        "F2 Mean": 1525.611,
+        "HNR": 10.869,
+        "Jitter Local": 0.751364
+      },
+      {
+        "F0 Mean": 111.086,
+        "F0 Min": 107.798,
+        "F0 Max": 126.722,
+        "F1 Mean": 642.363,
+        "F2 Mean": 1416.368,
+        "HNR": 13.336,
+        "Jitter Local": 0.663816
+      }
+    ],
+    "ddk_trials": [
+      {
+        "DDK Repetition Count": 27,
+        "DDK Repetition Rate": 2.7,
+        "DDK Interval Mean": 0.375,
+        "DDK Regularity": 38.132,
+        "Speech Rate": 2.7,
+        "Syllable Count": 27,
+        "Pause/Speech Ratio": 1.908,
+        "DDK Interval Std": 0.143
+      },
+      {
+        "DDK Repetition Count": 25,
+        "DDK Repetition Rate": 2.5,
+        "DDK Interval Mean": 0.407,
+        "DDK Regularity": 36.702,
+        "Speech Rate": 2.6,
+        "Syllable Count": 26,
+        "Pause/Speech Ratio": 2.698,
+        "DDK Interval Std": 0.149
+      },
+      {
+        "DDK Repetition Count": 25,
+        "DDK Repetition Rate": 2.5,
+        "DDK Interval Mean": 0.396,
+        "DDK Regularity": 23.803,
+        "Speech Rate": 0.9,
+        "Syllable Count": 9,
+        "Pause/Speech Ratio": 1.847,
+        "DDK Interval Std": 0.094
+      }
+    ],
+    "vowel_mean": {
+      "F0 Mean": 110.735,
+      "F0 Min": 88.95,
+      "F0 Max": 120.611,
+      "F1 Mean": 723.828,
+      "F2 Mean": 1545.201,
+      "HNR": 12.104,
+      "Jitter Local": 0.679
+    },
+    "ddk_mean": {
+      "DDK Repetition Count": 25.667,
+      "DDK Repetition Rate": 2.567,
+      "DDK Interval Mean": 0.393,
+      "DDK Regularity": 32.879,
+      "Speech Rate": 2.067,
+      "Syllable Count": 20.667,
+      "Pause/Speech Ratio": 2.151,
+      "DDK Interval Std": 0.129
+    },
+    "vowel_recordings": [
+      "recordings/vowel_1783277567.wav",
+      "recordings/vowel_1783277578.wav",
+      "recordings/vowel_1783277589.wav"
+    ],
+    "ddk_recordings": [
+      "recordings/ddk_1783277602.wav",
+      "recordings/ddk_1783277618.wav",
+      "recordings/ddk_1783277635.wav"
+    ],
+    "vowel_sd": {
+      "F0 Mean": 1.039,
+      "F0 Min": 27.546,
+      "F0 Max": 4.321,
+      "F1 Mean": 91.422,
+      "F2 Mean": 114.034,
+      "HNR": 1.007,
+      "Jitter Local": 0.054
+    },
+    "ddk_sd": {
+      "DDK Repetition Count": 0.943,
+      "DDK Repetition Rate": 0.094,
+      "DDK Interval Mean": 0.013,
+      "DDK Regularity": 6.444,
+      "Speech Rate": 0.826,
+      "Syllable Count": 8.26,
+      "Pause/Speech Ratio": 0.388,
+      "DDK Interval Std": 0.025
+    }
+  },
+  {
+    "timestamp": "2026-07-06 00:38:21",
+    "patient_name": "uu",
+    "patient_id": "55",
+    "age": 22,
+    "sex": "Male",
+    "vowel_trials": [
+      {
+        "F0 Mean": 110.275,
+        "F0 Min": 106.56,
+        "F0 Max": 135.035,
+        "F1 Mean": 654.122,
+        "F2 Mean": 1591.212,
+        "HNR": 11.195,
+        "Jitter Local": 1.015314
+      },
+      {
+        "F0 Mean": 114.956,
+        "F0 Min": 113.55,
+        "F0 Max": 117.555,
+        "F1 Mean": 610.287,
+        "F2 Mean": 1339.783,
+        "HNR": 11.961,
+        "Jitter Local": 0.43668
+      },
+      {
+        "F0 Mean": 115.43,
+        "F0 Min": 113.55,
+        "F0 Max": 116.205,
+        "F1 Mean": 614.943,
+        "F2 Mean": 1470.981,
+        "HNR": 12.025,
+        "Jitter Local": 0.344044
+      }
+    ],
+    "ddk_trials": [
+      {
+        "DDK Repetition Count": 22,
+        "DDK Repetition Rate": 2.2,
+        "DDK Interval Mean": 0.447,
+        "DDK Regularity": 27.519,
+        "Speech Rate": 2.0,
+        "Syllable Count": 20,
+        "Pause/Speech Ratio": 2.149,
+        "DDK Interval Std": 0.123
+      },
+      {
+        "DDK Repetition Count": 24,
+        "DDK Repetition Rate": 2.4,
+        "DDK Interval Mean": 0.373,
+        "DDK Regularity": 26.484,
+        "Speech Rate": 2.9,
+        "Syllable Count": 29,
+        "Pause/Speech Ratio": 1.698,
+        "DDK Interval Std": 0.099
+      },
+      {
+        "DDK Repetition Count": 27,
+        "DDK Repetition Rate": 2.7,
+        "DDK Interval Mean": 0.382,
+        "DDK Regularity": 26.048,
+        "Speech Rate": 3.2,
+        "Syllable Count": 32,
+        "Pause/Speech Ratio": 1.544,
+        "DDK Interval Std": 0.099
+      }
+    ],
+    "vowel_mean": {
+      "F0 Mean": 113.554,
+      "F0 Min": 111.22,
+      "F0 Max": 122.932,
+      "F1 Mean": 626.451,
+      "F2 Mean": 1467.325,
+      "HNR": 11.727,
+      "Jitter Local": 0.599
+    },
+    "ddk_mean": {
+      "DDK Repetition Count": 24.333,
+      "DDK Repetition Rate": 2.433,
+      "DDK Interval Mean": 0.401,
+      "DDK Regularity": 26.684,
+      "Speech Rate": 2.7,
+      "Syllable Count": 27.0,
+      "Pause/Speech Ratio": 1.797,
+      "DDK Interval Std": 0.107
+    },
+    "vowel_recordings": [
+      "recordings/vowel_1783278414.wav",
+      "recordings/vowel_1783278427.wav",
+      "recordings/vowel_1783278438.wav"
+    ],
+    "ddk_recordings": [
+      "recordings/ddk_1783278450.wav",
+      "recordings/ddk_1783278465.wav",
+      "recordings/ddk_1783278483.wav"
+    ],
+    "vowel_sd": {
+      "F0 Mean": 2.326,
+      "F0 Min": 3.295,
+      "F0 Max": 8.576,
+      "F1 Mean": 19.659,
+      "F2 Mean": 102.678,
+      "HNR": 0.377,
+      "Jitter Local": 0.297
+    },
+    "ddk_sd": {
+      "DDK Repetition Count": 2.055,
+      "DDK Repetition Rate": 0.205,
+      "DDK Interval Mean": 0.033,
+      "DDK Regularity": 0.617,
+      "Speech Rate": 0.51,
+      "Syllable Count": 5.099,
+      "Pause/Speech Ratio": 0.257,
+      "DDK Interval Std": 0.011
+    }
+  },
+  {
+    "timestamp": "2026-07-06 01:01:11",
+    "patient_name": "yy",
+    "patient_id": "12",
+    "age": 12,
+    "sex": "Female",
+    "vowel_trials": [
+      {
+        "F0 Mean": 229.162,
+        "F0 Min": 52.668,
+        "F0 Max": 342.238,
+        "F1 Mean": 927.975,
+        "F2 Mean": 1866.082,
+        "HNR": 9.236,
+        "Jitter Local": 5.002129
+      },
+      {
+        "F0 Mean": 118.798,
+        "F0 Min": 115.535,
+        "F0 Max": 129.684,
+        "F1 Mean": 538.977,
+        "F2 Mean": 1293.479,
+        "HNR": 18.803,
+        "Jitter Local": 0.500733
+      },
+      {
+        "F0 Mean": 107.481,
+        "F0 Min": 106.56,
+        "F0 Max": 110.957,
+        "F1 Mean": 672.069,
+        "F2 Mean": 1463.712,
+        "HNR": 17.74,
+        "Jitter Local": 1.034444
+      }
+    ],
+    "ddk_trials": [
+      {
+        "DDK Repetition Count": 20,
+        "DDK Repetition Rate": 2.0,
+        "DDK Interval Mean": 0.44,
+        "DDK Regularity": 45.937,
+        "Speech Rate": 2.2,
+        "Syllable Count": 22,
+        "Pause/Speech Ratio": 1.973,
+        "DDK Interval Std": 0.202
+      },
+      {
+        "DDK Repetition Count": 31,
+        "DDK Repetition Rate": 3.1,
+        "DDK Interval Mean": 0.327,
+        "DDK Regularity": 25.71,
+        "Speech Rate": 4.2,
+        "Syllable Count": 42,
+        "Pause/Speech Ratio": 1.453,
+        "DDK Interval Std": 0.084
+      },
+      {
+        "DDK Repetition Count": 27,
+        "DDK Repetition Rate": 2.7,
+        "DDK Interval Mean": 0.376,
+        "DDK Regularity": 34.727,
+        "Speech Rate": 2.4,
+        "Syllable Count": 24,
+        "Pause/Speech Ratio": 1.739,
+        "DDK Interval Std": 0.13
+      }
+    ],
+    "vowel_mean": {
+      "F0 Mean": 151.814,
+      "F0 Min": 91.588,
+      "F0 Max": 194.293,
+      "F1 Mean": 713.007,
+      "F2 Mean": 1541.091,
+      "HNR": 15.26,
+      "Jitter Local": 2.179
+    },
+    "ddk_mean": {
+      "DDK Repetition Count": 26.0,
+      "DDK Repetition Rate": 2.6,
+      "DDK Interval Mean": 0.381,
+      "DDK Regularity": 35.458,
+      "Speech Rate": 2.933,
+      "Syllable Count": 29.333,
+      "Pause/Speech Ratio": 1.722,
+      "DDK Interval Std": 0.139
+    },
+    "ambient_mean": {
+      "Ambient RMS": 0.023,
+      "Ambient Peak": 0.11,
+      "Noise Floor": 0.003,
+      "Spectral Centroid": 1473.961,
+      "Spectral Flatness": 0.001
+    },
+    "vowel_recordings": [
+      "recordings/vowel_1783279789.wav",
+      "recordings/vowel_1783279799.wav",
+      "recordings/vowel_1783279810.wav"
+    ],
+    "ddk_recordings": [
+      "recordings/ddk_1783279822.wav",
+      "recordings/ddk_1783279838.wav",
+      "recordings/ddk_1783279854.wav"
+    ],
+    "vowel_sd": {
+      "F0 Mean": 54.888,
+      "F0 Min": 27.763,
+      "F0 Max": 104.892,
+      "F1 Mean": 161.424,
+      "F2 Mean": 240.082,
+      "HNR": 4.281,
+      "Jitter Local": 2.008
+    },
+    "ddk_sd": {
+      "DDK Repetition Count": 4.546,
+      "DDK Repetition Rate": 0.455,
+      "DDK Interval Mean": 0.046,
+      "DDK Regularity": 8.274,
+      "Speech Rate": 0.899,
+      "Syllable Count": 8.994,
+      "Pause/Speech Ratio": 0.213,
+      "DDK Interval Std": 0.049
+    },
+    "ambient_sd": {
+      "Ambient RMS": 0.002,
+      "Ambient Peak": 0.016,
+      "Noise Floor": 0.0,
+      "Spectral Centroid": 159.484,
+      "Spectral Flatness": 0.0
+    }
+  },
+  {
+    "timestamp": "2026-07-22 11:45:14",
+    "patient_name": "Test",
+    "patient_id": "RD-123",
+    "age": 50,
+    "sex": "Male",
+    "vowel_trials": [
+      {
+        "F0 Mean": 0,
+        "F0 Min": 0,
+        "F0 Max": 0,
+        "F1 Mean": 0,
+        "F2 Mean": 0,
+        "HNR": 0,
+        "Jitter Local": NaN
+      }
+    ],
+    "ddk_trials": [
+      {
+        "DDK Repetition Count": 0,
+        "DDK Repetition Rate": 0,
+        "DDK Interval Mean": 0,
+        "DDK Regularity": 0,
+        "Speech Rate": 0.0,
+        "Syllable Count": 0,
+        "Pause/Speech Ratio": 0,
+        "DDK Interval Std": 0
+      }
+    ],
+    "vowel_mean": {
+      "F0 Mean": 0.0,
+      "F0 Min": 0.0,
+      "F0 Max": 0.0,
+      "F1 Mean": 0.0,
+      "F2 Mean": 0.0,
+      "HNR": 0.0,
+      "Jitter Local": NaN
+    },
+    "ddk_mean": {
+      "DDK Repetition Count": 0.0,
+      "DDK Repetition Rate": 0.0,
+      "DDK Interval Mean": 0.0,
+      "DDK Regularity": 0.0,
+      "Speech Rate": 0.0,
+      "Syllable Count": 0.0,
+      "Pause/Speech Ratio": 0.0,
+      "DDK Interval Std": 0.0
+    },
+    "ambient_mean": {},
+    "vowel_recordings": [
+      "recordings/vowel_mock1.wav"
+    ],
+    "ddk_recordings": [
+      "recordings/ddk_mock1.wav"
+    ],
+    "vowel_sd": {},
+    "ddk_sd": {},
+    "ambient_sd": {},
+    "recording_quality_mean": {},
+    "recording_quality_sd": {},
+    "recording_quality_classification": {}
+  },
+  {
+    "timestamp": "2026-07-22 11:46:46",
+    "patient_name": "Test",
+    "patient_id": "RD-12345",
+    "age": 50,
+    "sex": "Male",
+    "vowel_trials": [
+      {
+        "F0 Mean": 0,
+        "F0 Min": 0,
+        "F0 Max": 0,
+        "F1 Mean": 0,
+        "F2 Mean": 0,
+        "HNR": 0,
+        "Jitter Local": NaN
+      }
+    ],
+    "ddk_trials": [
+      {
+        "DDK Repetition Count": 0,
+        "DDK Repetition Rate": 0,
+        "DDK Interval Mean": 0,
+        "DDK Regularity": 0,
+        "Speech Rate": 0.0,
+        "Syllable Count": 0,
+        "Pause/Speech Ratio": 0,
+        "DDK Interval Std": 0
+      }
+    ],
+    "vowel_mean": {
+      "F0 Mean": 0.0,
+      "F0 Min": 0.0,
+      "F0 Max": 0.0,
+      "F1 Mean": 0.0,
+      "F2 Mean": 0.0,
+      "HNR": 0.0,
+      "Jitter Local": NaN
+    },
+    "ddk_mean": {
+      "DDK Repetition Count": 0.0,
+      "DDK Repetition Rate": 0.0,
+      "DDK Interval Mean": 0.0,
+      "DDK Regularity": 0.0,
+      "Speech Rate": 0.0,
+      "Syllable Count": 0.0,
+      "Pause/Speech Ratio": 0.0,
+      "DDK Interval Std": 0.0
+    },
+    "ambient_mean": {},
+    "vowel_recordings": [
+      "recordings/vowel_mock1.wav"
+    ],
+    "ddk_recordings": [
+      "recordings/ddk_mock1.wav"
+    ],
+    "vowel_sd": {},
+    "ddk_sd": {},
+    "ambient_sd": {},
+    "recording_quality_mean": {},
+    "recording_quality_sd": {},
+    "recording_quality_classification": {}
+  },
+  {
+    "timestamp": "2026-07-22 18:41:53",
+    "session_id": "33e5a50b-a457-4272-b674-4a6863157aa3",
+    "source": "uploaded",
+    "patient_name": "John Doe",
+    "patient_id": "RD-86569",
+    "age": "36",
+    "sex": "Male",
+    "vowel_trials": [
+      {
+        "F0 Mean": 149.278,
+        "F0 Min": 139.797,
+        "F0 Max": 152.45,
+        "F1 Mean": 748.261,
+        "F2 Mean": 1211.275,
+        "HNR": 21.106,
+        "Jitter Local": 0.306268
+      },
+      {
+        "F0 Mean": 148.072,
+        "F0 Min": 142.241,
+        "F0 Max": 150.699,
+        "F1 Mean": 765.817,
+        "F2 Mean": 1150.261,
+        "HNR": 20.422,
+        "Jitter Local": 0.282525
+      },
+      {
+        "F0 Mean": 145.838,
+        "F0 Min": 142.241,
+        "F0 Max": 188.775,
+        "F1 Mean": 747.6,
+        "F2 Mean": 1230.106,
+        "HNR": 22.426,
+        "Jitter Local": 0.134405
+      }
+    ],
+    "ddk_trials": [
+      {
+        "DDK Repetition Count": 44,
+        "DDK Repetition Rate": 4.4,
+        "DDK Interval Mean": 0.219,
+        "DDK Regularity": 56.654,
+        "Speech Rate": 8.3,
+        "Syllable Count": 83,
+        "Pause/Speech Ratio": 0.035,
+        "DDK Interval Std": 0.124
+      },
+      {
+        "DDK Repetition Count": 47,
+        "DDK Repetition Rate": 4.7,
+        "DDK Interval Mean": 0.209,
+        "DDK Regularity": 56.851,
+        "Speech Rate": 7.4,
+        "Syllable Count": 74,
+        "Pause/Speech Ratio": 0.024,
+        "DDK Interval Std": 0.119
+      },
+      {
+        "DDK Repetition Count": 49,
+        "DDK Repetition Rate": 4.9,
+        "DDK Interval Mean": 0.198,
+        "DDK Regularity": 56.587,
+        "Speech Rate": 7.5,
+        "Syllable Count": 75,
+        "Pause/Speech Ratio": 0.029,
+        "DDK Interval Std": 0.112
+      }
+    ],
+    "vowel_mean": {
+      "F0 Mean": 147.729,
+      "F0 Min": 141.426,
+      "F0 Max": 163.975,
+      "F1 Mean": 753.893,
+      "F2 Mean": 1197.214,
+      "HNR": 21.318,
+      "Jitter Local": 0.241
+    },
+    "ddk_mean": {
+      "DDK Repetition Count": 46.667,
+      "DDK Repetition Rate": 4.667,
+      "DDK Interval Mean": 0.209,
+      "DDK Regularity": 56.697,
+      "Speech Rate": 7.733,
+      "Syllable Count": 77.333,
+      "Pause/Speech Ratio": 0.029,
+      "DDK Interval Std": 0.118
+    },
+    "ambient_mean": {},
+    "vowel_recordings": [
+      "C:\\Users\\Goyam\\Downloads\\UIUX\\ARCxSpeech-main\\recordings\\upload_vowel_1784725902807695_0.wav",
+      "C:\\Users\\Goyam\\Downloads\\UIUX\\ARCxSpeech-main\\recordings\\upload_vowel_1784725911047151_1.wav",
+      "C:\\Users\\Goyam\\Downloads\\UIUX\\ARCxSpeech-main\\recordings\\upload_vowel_1784725912083167_2.wav"
+    ],
+    "ddk_recordings": [
+      "C:\\Users\\Goyam\\Downloads\\UIUX\\ARCxSpeech-main\\recordings\\upload_ddk_1784725913090559_3.wav",
+      "C:\\Users\\Goyam\\Downloads\\UIUX\\ARCxSpeech-main\\recordings\\upload_ddk_1784725913253558_4.wav",
+      "C:\\Users\\Goyam\\Downloads\\UIUX\\ARCxSpeech-main\\recordings\\upload_ddk_1784725913348344_5.wav"
+    ],
+    "vowel_sd": {
+      "F0 Mean": 1.425,
+      "F0 Min": 1.152,
+      "F0 Max": 17.551,
+      "F1 Mean": 8.436,
+      "F2 Mean": 34.079,
+      "HNR": 0.832,
+      "Jitter Local": 0.076
+    },
+    "ddk_sd": {
+      "DDK Repetition Count": 2.055,
+      "DDK Repetition Rate": 0.205,
+      "DDK Interval Mean": 0.009,
+      "DDK Regularity": 0.112,
+      "Speech Rate": 0.403,
+      "Syllable Count": 4.028,
+      "Pause/Speech Ratio": 0.004,
+      "DDK Interval Std": 0.005
+    },
+    "ambient_sd": {},
+    "recording_quality_mean": {},
+    "recording_quality_sd": {},
+    "recording_quality_classification": {}
+  },
+  {
+    "timestamp": "2026-07-22 18:41:53",
+    "patient_id": "RD-86569",
+    "session_id": "33e5a50b-a457-4272-b674-4a6863157aa3",
+    "source": "uploaded",
+    "ui_tasks": [
+      {
+        "name": "Sustained Vowel",
+        "duration": "--",
+        "status": "Uploaded"
+      },
+      {
+        "name": "Sustained Vowel",
+        "duration": "--",
+        "status": "Uploaded"
+      },
+      {
+        "name": "Sustained Vowel",
+        "duration": "--",
+        "status": "Uploaded"
+      },
+      {
+        "name": "DDK Task",
+        "duration": "--",
+        "status": "Uploaded"
+      },
+      {
+        "name": "DDK Task",
+        "duration": "--",
+        "status": "Uploaded"
+      },
+      {
+        "name": "DDK Task",
+        "duration": "--",
+        "status": "Uploaded"
+      }
+    ]
+  },
+  {
+    "timestamp": "2026-07-29 11:54:23",
+    "session_id": "0a3b2749-ea3a-4c0e-9cb1-e458f22821ca",
+    "source": "uploaded",
+    "patient_name": "John Doe",
+    "patient_id": "RD-86569",
+    "age": "36",
+    "sex": "Male",
+    "vowel_trials": [
+      {
+        "F0 Mean": 114.658,
+        "F0 Min": 112.246,
+        "F0 Max": 116.878,
+        "F1 Mean": 727.397,
+        "F2 Mean": 1137.095,
+        "HNR": 17.641,
+        "Jitter Local": 0.374058
+      }
+    ],
+    "ddk_trials": [
+      {
+        "DDK Repetition Count": 26,
+        "DDK Repetition Rate": 2.6,
+        "DDK Interval Mean": 0.381,
+        "DDK Regularity": 45.769,
+        "Speech Rate": 2.8,
+        "Syllable Count": 28,
+        "Pause/Speech Ratio": 0.047,
+        "DDK Interval Std": 0.174
+      }
+    ],
+    "vowel_mean": {
+      "F0 Mean": 114.658,
+      "F0 Min": 112.246,
+      "F0 Max": 116.878,
+      "F1 Mean": 727.397,
+      "F2 Mean": 1137.095,
+      "HNR": 17.641,
+      "Jitter Local": 0.374
+    },
+    "ddk_mean": {
+      "DDK Repetition Count": 26.0,
+      "DDK Repetition Rate": 2.6,
+      "DDK Interval Mean": 0.381,
+      "DDK Regularity": 45.769,
+      "Speech Rate": 2.8,
+      "Syllable Count": 28.0,
+      "Pause/Speech Ratio": 0.047,
+      "DDK Interval Std": 0.174
+    },
+    "ambient_mean": {},
+    "vowel_recordings": [
+      "C:\\Users\\91977\\OneDrive\\Desktop\\UIUX - Copy\\ARCxSpeech-main\\recordings\\upload_vowel_1785306224583972_0.wav"
+    ],
+    "ddk_recordings": [
+      "C:\\Users\\91977\\OneDrive\\Desktop\\UIUX - Copy\\ARCxSpeech-main\\recordings\\upload_ddk_1785306263047646_1.wav"
+    ],
+    "vowel_sd": {},
+    "ddk_sd": {},
+    "ambient_sd": {},
+    "recording_quality_mean": {},
+    "recording_quality_sd": {},
+    "recording_quality_classification": {}
+  },
+  {
+    "timestamp": "2026-07-29 11:54:23",
+    "patient_id": "RD-86569",
+    "session_id": "0a3b2749-ea3a-4c0e-9cb1-e458f22821ca",
+    "source": "uploaded",
+    "ui_tasks": [
+      {
+        "name": "Sustained Vowel",
+        "duration": "--",
+        "status": "Uploaded"
+      },
+      {
+        "name": "DDK Task",
+        "duration": "--",
+        "status": "Uploaded"
+      }
+    ]
+  },
+  {
+    "timestamp": "2026-07-29 11:57:28",
+    "session_id": "bdc593c8-9381-4b4d-9387-f8ad5cc0bfd1",
+    "source": "uploaded",
+    "patient_name": "John Doe",
+    "patient_id": "RD-86569",
+    "age": "36",
+    "sex": "Male",
+    "vowel_trials": [
+      {
+        "F0 Mean": 117.15,
+        "F0 Min": 115.535,
+        "F0 Max": 118.236,
+        "F1 Mean": 662.169,
+        "F2 Mean": 1133.266,
+        "HNR": 16.868,
+        "Jitter Local": 0.399187
+      },
+      {
+        "F0 Mean": 118.088,
+        "F0 Min": 116.205,
+        "F0 Max": 120.303,
+        "F1 Mean": 684.825,
+        "F2 Mean": 1158.549,
+        "HNR": 17.842,
+        "Jitter Local": 0.408063
+      },
+      {
+        "F0 Mean": 114.658,
+        "F0 Min": 112.246,
+        "F0 Max": 116.878,
+        "F1 Mean": 727.397,
+        "F2 Mean": 1137.095,
+        "HNR": 17.641,
+        "Jitter Local": 0.374058
+      }
+    ],
+    "ddk_trials": [
+      {
+        "DDK Repetition Count": 31,
+        "DDK Repetition Rate": 3.1,
+        "DDK Interval Mean": 0.316,
+        "DDK Regularity": 46.846,
+        "Speech Rate": 3.0,
+        "Syllable Count": 30,
+        "Pause/Speech Ratio": 0.076,
+        "DDK Interval Std": 0.148
+      },
+      {
+        "DDK Repetition Count": 25,
+        "DDK Repetition Rate": 2.5,
+        "DDK Interval Mean": 0.389,
+        "DDK Regularity": 45.072,
+        "Speech Rate": 2.6,
+        "Syllable Count": 26,
+        "Pause/Speech Ratio": 0.052,
+        "DDK Interval Std": 0.175
+      },
+      {
+        "DDK Repetition Count": 26,
+        "DDK Repetition Rate": 2.6,
+        "DDK Interval Mean": 0.381,
+        "DDK Regularity": 45.769,
+        "Speech Rate": 2.8,
+        "Syllable Count": 28,
+        "Pause/Speech Ratio": 0.047,
+        "DDK Interval Std": 0.174
+      }
+    ],
+    "vowel_mean": {
+      "F0 Mean": 116.632,
+      "F0 Min": 114.662,
+      "F0 Max": 118.472,
+      "F1 Mean": 691.464,
+      "F2 Mean": 1142.97,
+      "HNR": 17.45,
+      "Jitter Local": 0.394
+    },
+    "ddk_mean": {
+      "DDK Repetition Count": 27.333,
+      "DDK Repetition Rate": 2.733,
+      "DDK Interval Mean": 0.362,
+      "DDK Regularity": 45.896,
+      "Speech Rate": 2.8,
+      "Syllable Count": 28.0,
+      "Pause/Speech Ratio": 0.058,
+      "DDK Interval Std": 0.166
+    },
+    "ambient_mean": {},
+    "vowel_recordings": [
+      "C:\\Users\\91977\\OneDrive\\Desktop\\UIUX - Copy\\ARCxSpeech-main\\recordings\\upload_vowel_1785306441414867_2.wav",
+      "C:\\Users\\91977\\OneDrive\\Desktop\\UIUX - Copy\\ARCxSpeech-main\\recordings\\upload_vowel_1785306442497943_3.wav",
+      "C:\\Users\\91977\\OneDrive\\Desktop\\UIUX - Copy\\ARCxSpeech-main\\recordings\\upload_vowel_1785306445105699_4.wav"
+    ],
+    "ddk_recordings": [
+      "C:\\Users\\91977\\OneDrive\\Desktop\\UIUX - Copy\\ARCxSpeech-main\\recordings\\upload_ddk_1785306447768702_5.wav",
+      "C:\\Users\\91977\\OneDrive\\Desktop\\UIUX - Copy\\ARCxSpeech-main\\recordings\\upload_ddk_1785306448026919_6.wav",
+      "C:\\Users\\91977\\OneDrive\\Desktop\\UIUX - Copy\\ARCxSpeech-main\\recordings\\upload_ddk_1785306448265346_7.wav"
+    ],
+    "vowel_sd": {
+      "F0 Mean": 1.447,
+      "F0 Min": 1.73,
+      "F0 Max": 1.408,
+      "F1 Mean": 27.04,
+      "F2 Mean": 11.126,
+      "HNR": 0.42,
+      "Jitter Local": 0.014
+    },
+    "ddk_sd": {
+      "DDK Repetition Count": 2.625,
+      "DDK Repetition Rate": 0.262,
+      "DDK Interval Mean": 0.033,
+      "DDK Regularity": 0.73,
+      "Speech Rate": 0.163,
+      "Syllable Count": 1.633,
+      "Pause/Speech Ratio": 0.013,
+      "DDK Interval Std": 0.012
+    },
+    "ambient_sd": {},
+    "recording_quality_mean": {},
+    "recording_quality_sd": {},
+    "recording_quality_classification": {}
+  },
+  {
+    "timestamp": "2026-07-29 11:57:28",
+    "patient_id": "RD-86569",
+    "session_id": "bdc593c8-9381-4b4d-9387-f8ad5cc0bfd1",
+    "source": "uploaded",
+    "ui_tasks": [
+      {
+        "name": "Sustained Vowel",
+        "duration": "--",
+        "status": "Uploaded"
+      },
+      {
+        "name": "Sustained Vowel",
+        "duration": "--",
+        "status": "Uploaded"
+      },
+      {
+        "name": "Sustained Vowel",
+        "duration": "--",
+        "status": "Uploaded"
+      },
+      {
+        "name": "DDK Task",
+        "duration": "--",
+        "status": "Uploaded"
+      },
+      {
+        "name": "DDK Task",
+        "duration": "--",
+        "status": "Uploaded"
+      },
+      {
+        "name": "DDK Task",
+        "duration": "--",
+        "status": "Uploaded"
+      }
+    ]
+  },
+  {
+    "timestamp": "2026-07-29 12:01:24",
+    "session_id": "3a7cad6b-cff4-4781-833f-accb8bd9fa63",
+    "source": "uploaded",
+    "patient_name": "Sukhjot",
+    "patient_id": "8008",
+    "age": "69",
+    "sex": "Other",
+    "vowel_trials": [
+      {
+        "F0 Mean": 117.15,
+        "F0 Min": 115.535,
+        "F0 Max": 118.236,
+        "F1 Mean": 662.169,
+        "F2 Mean": 1133.266,
+        "HNR": 16.868,
+        "Jitter Local": 0.399187
+      },
+      {
+        "F0 Mean": 118.088,
+        "F0 Min": 116.205,
+        "F0 Max": 120.303,
+        "F1 Mean": 684.825,
+        "F2 Mean": 1158.549,
+        "HNR": 17.842,
+        "Jitter Local": 0.408063
+      },
+      {
+        "F0 Mean": 114.658,
+        "F0 Min": 112.246,
+        "F0 Max": 116.878,
+        "F1 Mean": 727.397,
+        "F2 Mean": 1137.095,
+        "HNR": 17.641,
+        "Jitter Local": 0.374058
+      }
+    ],
+    "ddk_trials": [
+      {
+        "DDK Repetition Count": 31,
+        "DDK Repetition Rate": 3.1,
+        "DDK Interval Mean": 0.316,
+        "DDK Regularity": 46.846,
+        "Speech Rate": 3.0,
+        "Syllable Count": 30,
+        "Pause/Speech Ratio": 0.076,
+        "DDK Interval Std": 0.148
+      },
+      {
+        "DDK Repetition Count": 25,
+        "DDK Repetition Rate": 2.5,
+        "DDK Interval Mean": 0.389,
+        "DDK Regularity": 45.072,
+        "Speech Rate": 2.6,
+        "Syllable Count": 26,
+        "Pause/Speech Ratio": 0.052,
+        "DDK Interval Std": 0.175
+      },
+      {
+        "DDK Repetition Count": 26,
+        "DDK Repetition Rate": 2.6,
+        "DDK Interval Mean": 0.381,
+        "DDK Regularity": 45.769,
+        "Speech Rate": 2.8,
+        "Syllable Count": 28,
+        "Pause/Speech Ratio": 0.047,
+        "DDK Interval Std": 0.174
+      }
+    ],
+    "vowel_mean": {
+      "F0 Mean": 116.632,
+      "F0 Min": 114.662,
+      "F0 Max": 118.472,
+      "F1 Mean": 691.464,
+      "F2 Mean": 1142.97,
+      "HNR": 17.45,
+      "Jitter Local": 0.394
+    },
+    "ddk_mean": {
+      "DDK Repetition Count": 27.333,
+      "DDK Repetition Rate": 2.733,
+      "DDK Interval Mean": 0.362,
+      "DDK Regularity": 45.896,
+      "Speech Rate": 2.8,
+      "Syllable Count": 28.0,
+      "Pause/Speech Ratio": 0.058,
+      "DDK Interval Std": 0.166
+    },
+    "ambient_mean": {},
+    "vowel_recordings": [
+      "C:\\Users\\91977\\OneDrive\\Desktop\\UIUX - Copy\\ARCxSpeech-main\\recordings\\upload_vowel_1785306675273735_0.wav",
+      "C:\\Users\\91977\\OneDrive\\Desktop\\UIUX - Copy\\ARCxSpeech-main\\recordings\\upload_vowel_1785306681397366_1.wav",
+      "C:\\Users\\91977\\OneDrive\\Desktop\\UIUX - Copy\\ARCxSpeech-main\\recordings\\upload_vowel_1785306682583094_2.wav"
+    ],
+    "ddk_recordings": [
+      "C:\\Users\\91977\\OneDrive\\Desktop\\UIUX - Copy\\ARCxSpeech-main\\recordings\\upload_ddk_1785306683884926_3.wav",
+      "C:\\Users\\91977\\OneDrive\\Desktop\\UIUX - Copy\\ARCxSpeech-main\\recordings\\upload_ddk_1785306683999851_4.wav",
+      "C:\\Users\\91977\\OneDrive\\Desktop\\UIUX - Copy\\ARCxSpeech-main\\recordings\\upload_ddk_1785306684128308_5.wav"
+    ],
+    "vowel_sd": {
+      "F0 Mean": 1.447,
+      "F0 Min": 1.73,
+      "F0 Max": 1.408,
+      "F1 Mean": 27.04,
+      "F2 Mean": 11.126,
+      "HNR": 0.42,
+      "Jitter Local": 0.014
+    },
+    "ddk_sd": {
+      "DDK Repetition Count": 2.625,
+      "DDK Repetition Rate": 0.262,
+      "DDK Interval Mean": 0.033,
+      "DDK Regularity": 0.73,
+      "Speech Rate": 0.163,
+      "Syllable Count": 1.633,
+      "Pause/Speech Ratio": 0.013,
+      "DDK Interval Std": 0.012
+    },
+    "ambient_sd": {},
+    "recording_quality_mean": {},
+    "recording_quality_sd": {},
+    "recording_quality_classification": {}
+  },
+  {
+    "timestamp": "2026-07-29 12:01:24",
+    "patient_id": "8008",
+    "session_id": "3a7cad6b-cff4-4781-833f-accb8bd9fa63",
+    "source": "uploaded",
+    "ui_tasks": [
+      {
+        "name": "Sustained Vowel",
+        "duration": "--",
+        "status": "Uploaded"
+      },
+      {
+        "name": "Sustained Vowel",
+        "duration": "--",
+        "status": "Uploaded"
+      },
+      {
+        "name": "Sustained Vowel",
+        "duration": "--",
+        "status": "Uploaded"
+      },
+      {
+        "name": "DDK Task",
+        "duration": "--",
+        "status": "Uploaded"
+      },
+      {
+        "name": "DDK Task",
+        "duration": "--",
+        "status": "Uploaded"
+      },
+      {
+        "name": "DDK Task",
+        "duration": "--",
+        "status": "Uploaded"
+      }
+    ]
+  },
+  {
+    "timestamp": "2026-07-29 12:07:52",
+    "session_id": "7624c150-ea65-4dd6-ae48-2eb16a8deb29",
+    "source": "uploaded",
+    "patient_name": "sukhi",
+    "patient_id": "80085",
+    "age": "27",
+    "sex": "Male",
+    "vowel_trials": [
+      {
+        "F0 Mean": 114.658,
+        "F0 Min": 112.246,
+        "F0 Max": 116.878,
+        "F1 Mean": 727.397,
+        "F2 Mean": 1137.095,
+        "HNR": 17.641,
+        "Jitter Local": 0.374058
+      }
+    ],
+    "ddk_trials": [
+      {
+        "DDK Repetition Count": 26,
+        "DDK Repetition Rate": 2.6,
+        "DDK Interval Mean": 0.381,
+        "DDK Regularity": 45.769,
+        "Speech Rate": 2.8,
+        "Syllable Count": 28,
+        "Pause/Speech Ratio": 0.047,
+        "DDK Interval Std": 0.174
+      }
+    ],
+    "vowel_mean": {
+      "F0 Mean": 114.658,
+      "F0 Min": 112.246,
+      "F0 Max": 116.878,
+      "F1 Mean": 727.397,
+      "F2 Mean": 1137.095,
+      "HNR": 17.641,
+      "Jitter Local": 0.374
+    },
+    "ddk_mean": {
+      "DDK Repetition Count": 26.0,
+      "DDK Repetition Rate": 2.6,
+      "DDK Interval Mean": 0.381,
+      "DDK Regularity": 45.769,
+      "Speech Rate": 2.8,
+      "Syllable Count": 28.0,
+      "Pause/Speech Ratio": 0.047,
+      "DDK Interval Std": 0.174
+    },
+    "ambient_mean": {},
+    "vowel_recordings": [
+      "C:\\Users\\91977\\OneDrive\\Desktop\\UIUX - Copy\\ARCxSpeech-main\\recordings\\upload_vowel_1785307070871322_6.wav"
+    ],
+    "ddk_recordings": [
+      "C:\\Users\\91977\\OneDrive\\Desktop\\UIUX - Copy\\ARCxSpeech-main\\recordings\\upload_ddk_1785307071983948_7.wav"
+    ],
+    "vowel_sd": {},
+    "ddk_sd": {},
+    "ambient_sd": {},
+    "recording_quality_mean": {},
+    "recording_quality_sd": {},
+    "recording_quality_classification": {}
+  },
+  {
+    "timestamp": "2026-07-29 12:07:52",
+    "patient_id": "80085",
+    "session_id": "7624c150-ea65-4dd6-ae48-2eb16a8deb29",
+    "source": "uploaded",
+    "ui_tasks": [
+      {
+        "name": "Sustained Vowel",
+        "duration": "--",
+        "status": "Uploaded"
+      },
+      {
+        "name": "DDK Task",
+        "duration": "--",
+        "status": "Uploaded"
+      }
+    ]
+  }
+]
