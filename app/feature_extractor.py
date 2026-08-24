@@ -14,6 +14,19 @@ from scipy.signal import find_peaks
 # LOAD AUDIO
 # =====================================
 
+# Every measurement downstream (F0 via pyin, jitter/HNR/formants via
+# Praat, DDK intensity/pitch timing) now runs on audio resampled to
+# this ONE fixed rate, regardless of what sample rate the input file
+# was recorded at. Previously F0 alone was resampled to 16kHz inside
+# extract_vowel_features while everything else (HNR, jitter, formants)
+# ran on the file's native rate -- that inconsistency is what produced
+# an ~8% HNR drift across input sample rates in the Signal Verification
+# Suite (app/synthetic). 16kHz is also the conventional resampling
+# target for Praat/Klatt-style formant analysis on adult speech
+# (Nyquist comfortably covers F1-F3), so this isn't a downgrade.
+ANALYSIS_SAMPLE_RATE = 16000
+
+
 def load_audio(filepath):
 
     # filepath now points at the isolated patient-audio mono WAV
@@ -34,6 +47,19 @@ def load_audio(filepath):
         # Defensive fallback in case a stereo file is ever passed in
         # (e.g. an old pre-split recording).
         patient_audio = audio[PATIENT_CHANNEL]
+
+    # Resample once, here, to the fixed analysis rate -- so F0, jitter,
+    # HNR, formants, and DDK timing all measure the IDENTICAL audio,
+    # no matter what sample rate the file was recorded at.
+    if sr != ANALYSIS_SAMPLE_RATE:
+
+        patient_audio = librosa.resample(
+            patient_audio,
+            orig_sr=sr,
+            target_sr=ANALYSIS_SAMPLE_RATE
+        )
+
+        sr = ANALYSIS_SAMPLE_RATE
 
     # ambient_audio is no longer read from this file; kept as a zero
     # array so the 5-value return signature (and every caller that
@@ -203,42 +229,63 @@ def extract_vowel_features(filepath):
         filepath
     )
 
-    # Downsample for pitch tracking
-
-    y_16k = librosa.resample(
-        patient_audio,    
-        orig_sr=sr,
-        target_sr=16000
-    )
+    # patient_audio is already at ANALYSIS_SAMPLE_RATE (16kHz) coming
+    # out of load_audio -- no separate resample needed here anymore.
 
     # -------------------------
     # F0
     # -------------------------
 
     f0, voiced_flag, voiced_probs = librosa.pyin(
-        y_16k,
+        patient_audio,
         fmin=50,
-        fmax=500,
-        sr=16000
+        fmax=650,
+        sr=sr,
+        frame_length=1024
     )
 
-    f0_clean = f0[
-        ~np.isnan(f0)
-    ]
+    # Minimum fraction of analysis frames that must be voiced before we
+    # trust F0 Mean at all. This is deliberately a FRACTION-OF-FRAMES
+    # gate, not a per-frame voiced_probs threshold: per-frame confidence
+    # is naturally low on genuinely noisy/dysarthric real voice too (a
+    # noisy but real voiced signal still measured 100% voiced frames in
+    # testing, just with low per-frame probability), so thresholding on
+    # voiced_probs would risk rejecting exactly the clinical population
+    # this app is for. Pure noise, by contrast, only produces scattered,
+    # non-sustained "voiced" frames -- in testing: ~16% for white noise
+    # vs 100% for every real voiced signal tested (clean or noisy). 30%
+    # leaves a wide margin on both sides of that gap.
+    
+    MIN_VOICED_FRACTION = 0.30
+
+    voiced_mask = ~np.isnan(f0)
+
+    voiced_fraction = (
+        float(np.count_nonzero(voiced_mask)) / len(f0)
+        if len(f0) > 0 else 0.0
+    )
+
+    if voiced_fraction >= MIN_VOICED_FRACTION:
+
+        f0_clean = f0[voiced_mask]
+
+    else:
+
+        f0_clean = np.array([])
 
     if len(f0_clean) > 0:
 
-        f0_mean = float(
-            np.mean(f0_clean)
+        median_f0 = np.median(f0_clean)
+
+        ratio = f0_clean / median_f0
+        f0_corrected = np.where(
+            ratio > 1.8, f0_clean / 2.0,
+            np.where(ratio < 0.55, f0_clean * 2.0, f0_clean)
         )
 
-        f0_min = float(
-            np.min(f0_clean)
-        )
-
-        f0_max = float(
-            np.max(f0_clean)
-        )
+        f0_mean = float(np.mean(f0_corrected))
+        f0_min = float(np.min(f0_corrected))
+        f0_max = float(np.max(f0_corrected))
 
     else:
 
@@ -250,7 +297,7 @@ def extract_vowel_features(filepath):
     # PRAAT FEATURES
     # -------------------------
 
-    formant = snd.to_formant_burg()
+    formant = snd.to_formant_burg(window_length=0.04)
 
     times = formant.ts()
 
@@ -345,41 +392,14 @@ def extract_vowel_features(filepath):
     jitter_local = jitter_local * 100
 
     vowel_metrics = {
-
-        "F0 Mean": round(
-            f0_mean,
-            3
-        ),
-
-        "F0 Min": round(
-            f0_min,
-            3
-        ),
-
-        "F0 Max": round(
-            f0_max,
-            3
-        ),
-
-        "F1 Mean": round(
-            f1_mean,
-            3
-        ),
-
-        "F2 Mean": round(
-            f2_mean,
-            3
-        ),
-
-        "HNR": round(
-            hnr,
-            3
-        ),
-
-        "Jitter Local": round(
-            jitter_local,
-            6
-        )
+        "F0 Mean": round(f0_mean, 3),
+        "F0 Min": round(f0_min, 3),
+        "F0 Max": round(f0_max, 3),
+        "F1 Mean": round(f1_mean, 3),
+        "F2 Mean": round(f2_mean, 3),
+        "HNR": round(hnr, 3),
+        "Jitter Local": round(jitter_local, 6),
+        "F0 Near Search Ceiling": f0_mean > 0 and (650 - f0_mean) < 20,
     }
 
     return vowel_metrics
@@ -465,7 +485,7 @@ def extract_ddk_features(filepath):
         # (~120ms) -- fast enough not to merge genuine rapid
         # /pa-ta-ka/ repetitions, but still guards against
         # noise-driven micro-peaks inflating the count.
-        min_distance = max(int(0.12 / time_step), 1)
+        min_distance = max(int(0.08 / time_step), 1)
 
         peak_indices, _ = find_peaks(
             intensity_values,
@@ -500,7 +520,8 @@ def extract_ddk_features(filepath):
 
             intervals = np.diff(valid_peak_times)
 
-            repetition_rate = repetition_count / duration
+            span = valid_peak_times[-1] - valid_peak_times[0]
+            repetition_rate = (repetition_count - 1) / span if span > 0 else 0
 
             interval_mean = float(np.mean(intervals))
             interval_std = float(np.std(intervals))
