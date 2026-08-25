@@ -1,0 +1,134 @@
+[
+  {
+    "recording_id": "f2639428-4237-45ac-80b1-18675841f617",
+    "session_id": "62eb143c-595f-439e-9e24-ab7e6d9a64b0",
+    "task": "Sustained Vowel",
+    "source": "uploaded",
+    "created_at": "2026-08-25T12:09:51.577677",
+    "patient_filepath": "recordings\\upload_vowel_1787639987994573_0.wav",
+    "ambient_filepath": null,
+    "features": {
+      "F0 Mean": 144.507,
+      "F0 Min": 142.241,
+      "F0 Max": 166.248,
+      "F1 Mean": 856.561,
+      "F2 Mean": 994.348,
+      "HNR": 17.148,
+      "Jitter Local": 0.273298,
+      "F0 Near Search Ceiling": false
+    },
+    "ambient_metrics": null,
+    "quality_metrics": null,
+    "quality_classification": null
+  },
+  {
+    "recording_id": "d3031be8-ac1b-4d6f-a9c4-93b63e89fa7e",
+    "session_id": "62eb143c-595f-439e-9e24-ab7e6d9a64b0",
+    "task": "Sustained Vowel",
+    "source": "uploaded",
+    "created_at": "2026-08-25T12:09:52.840250",
+    "patient_filepath": "recordings\\upload_vowel_1787639991610239_1.wav",
+    "ambient_filepath": null,
+    "features": {
+      "F0 Mean": 143.917,
+      "F0 Min": 142.241,
+      "F0 Max": 145.565,
+      "F1 Mean": 798.349,
+      "F2 Mean": 1028.316,
+      "HNR": 15.738,
+      "Jitter Local": 0.181497,
+      "F0 Near Search Ceiling": false
+    },
+    "ambient_metrics": null,
+    "quality_metrics": null,
+    "quality_classification": null
+  },
+  {
+    "recording_id": "12915d1b-f851-413c-9133-537a5973ece4",
+    "session_id": "62eb143c-595f-439e-9e24-ab7e6d9a64b0",
+    "task": "Sustained Vowel",
+    "source": "uploaded",
+    "created_at": "2026-08-25T12:09:54.078666",
+    "patient_filepath": "recordings\\upload_vowel_1787639992872952_2.wav",
+    "ambient_filepath": null,
+    "features": {
+      "F0 Mean": 141.394,
+      "F0 Min": 139.797,
+      "F0 Max": 143.065,
+      "F1 Mean": 815.305,
+      "F2 Mean": 1042.603,
+      "HNR": 14.289,
+      "Jitter Local": 0.518102,
+      "F0 Near Search Ceiling": false
+    },
+    "ambient_metrics": null,
+    "quality_metrics": null,
+    "quality_classification": null
+  },
+  {
+    "recording_id": "635ea377-c2be-49e4-8a6a-30111a099507",
+    "session_id": "62eb143c-595f-439e-9e24-ab7e6d9a64b0",
+    "task": "DDK",
+    "source": "uploaded",
+    "created_at": "2026-08-25T12:12:47.628397",
+    "patient_filepath": "recordings\\upload_ddk_1787640167606852_3.wav",
+    "ambient_filepath": null,
+    "features": {
+      "DDK Repetition Count": 55,
+      "DDK Repetition Rate": 5.75,
+      "DDK Interval Mean": 0.174,
+      "DDK Regularity": 60.065,
+      "Speech Rate": 6.7,
+      "Syllable Count": 67,
+      "Pause/Speech Ratio": 0.038,
+      "DDK Interval Std": 0.104
+    },
+    "ambient_metrics": null,
+    "quality_metrics": null,
+    "quality_classification": null
+  },
+  {
+    "recording_id": "5dd07b19-6c9c-4bbe-8c84-eeb424811db3",
+    "session_id": "62eb143c-595f-439e-9e24-ab7e6d9a64b0",
+    "task": "DDK",
+    "source": "uploaded",
+    "created_at": "2026-08-25T12:12:47.652828",
+    "patient_filepath": "recordings\\upload_ddk_1787640167631496_4.wav",
+    "ambient_filepath": null,
+    "features": {
+      "DDK Repetition Count": 55,
+      "DDK Repetition Rate": 5.715,
+      "DDK Interval Mean": 0.175,
+      "DDK Regularity": 55.08,
+      "Speech Rate": 7.5,
+      "Syllable Count": 75,
+      "Pause/Speech Ratio": 0.034,
+      "DDK Interval Std": 0.096
+    },
+    "ambient_metrics": null,
+    "quality_metrics": null,
+    "quality_classification": null
+  },
+  {
+    "recording_id": "cafe863a-58a2-48e4-8c6d-8fa8fc88b640",
+    "session_id": "62eb143c-595f-439e-9e24-ab7e6d9a64b0",
+    "task": "DDK",
+    "source": "uploaded",
+    "created_at": "2026-08-25T12:12:47.676837",
+    "patient_filepath": "recordings\\upload_ddk_1787640167655214_5.wav",
+    "ambient_filepath": null,
+    "features": {
+      "DDK Repetition Count": 61,
+      "DDK Repetition Rate": 6.399,
+      "DDK Interval Mean": 0.156,
+      "DDK Regularity": 55.261,
+      "Speech Rate": 8.1,
+      "Syllable Count": 81,
+      "Pause/Speech Ratio": 0.04,
+      "DDK Interval Std": 0.086
+    },
+    "ambient_metrics": null,
+    "quality_metrics": null,
+    "quality_classification": null
+  }
+]
